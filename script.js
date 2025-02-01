@@ -190,7 +190,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             await new Promise(resolve => setTimeout(resolve, 500)); // 0.5초 대기
             
-            const exchangeRateRaw = await fetchWithRetry('https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/usd/krw.json', {
+            const exchangeRateRaw = await fetchWithRetry('https://open.er-api.com/v6/latest/USD', {
                 retries: 2,
                 delay: 1000,
                 cacheKey: 'exchangeRate',
@@ -253,7 +253,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             // 안전한 값 추출
             const upbitPrice = upbitData?.trade_price || 0;
             const binancePrice = parseFloat(binanceData?.lastPrice || '0');
-            const usdKrwRate = exchangeRate?.krw || 0;
+            const usdKrwRate = exchangeRate?.rates?.KRW || 0;
             const minedBtc = (totalBtc || 0) / 100000000;
             const remainingBtc = 21000000 - minedBtc;
             const fearGreedValue = parseInt(fearGreed?.data?.amount || '0');

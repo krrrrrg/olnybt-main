@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>비트코인 실시간 가격 정보</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-mode"> <!-- 다크 모드를 기본으로 설정 -->
+<div class="container">
+    <div class="header">
+        <h1>비트코인 실시간 가격 정보</h1>
+        <button id="toggle-mode" class="mode-button">라이트 모드</button> <!-- 기본 텍스트를 '라이트 모드'로 설정 -->
+    </div>
+
+    <div class="card">
+        <div class="price-info">
+            <p>업비트 기준 한화 가격: <span id="upbit-price">로딩 중...</span></p>
+            <p>바이낸스 기준 달러 가격: <span id="binance-price">로딩 중...</span></p>
+            <p>현재 환율 (KRW/USD): <span id="exchange-rate">로딩 중...</span></p>
+            <p>김치 프리미엄: <span id="kimchi-premium">로딩 중...</span></p>
+            <p>비트코인 도미넌스: <span id="btc-dominance">로딩 중...</span></p>
+            <p>현재까지 채굴된 비트코인 수량: <span id="btc-mined">로딩 중...</span></p>
+            <p>남은 비트코인 채굴량: <span id="btc-remaining">로딩 중...</span></p>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>암호화폐 공포와 탐욕 지표</h2>
+        <div class="fear-greed-meter">
+            <img id="fear-greed-image" src="" alt="탐욕 지수 차트">
+            <p>지금: <span id="fear-greed-score">로딩 중...</span></p>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>비트코인 15분 봉 차트</h2>
+        <iframe id="tradingview-chart"
+                src="https://www.tradingview.com/widgetembed/?frameElementId=tradingview_8fa72&symbol=BINANCE%3ABTCUSDT&interval=15&hidesidetoolbar=1&symboledit=1&saveimage=1&toolbarbg=f1f3f6&hideideas=1&theme=dark&style=1&timezone=Etc%2FUTC&studies=%5B%5D&watchlist=%5B%5D&hidelegend=1&widgetbarwidth=300"
+                width="100%" height="400" allowfullscreen></iframe>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>ㄴ

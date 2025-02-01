@@ -149,10 +149,10 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         // 모든 재시도 실패 시 캐시된 데이터 반환 (오래되었어도 낫음)
         if (cacheKey) {
-            const staleCache = cacheManager.getStaleCache(cacheKey);
-            if (staleCache) {
-                console.warn(`Using stale cache for ${url}`);
-                return staleCache;
+            const cached = cacheManager.get(cacheKey);
+            if (cached) {
+                console.warn(`Using cache for ${url}`);
+                return cached;
             }
         }
 
@@ -164,11 +164,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         try {
             // 모든 API 요청 동시 실행
             const [
-                upbitData,
-                binanceData,
-                fearGreed,
-                exchangeRate,
-                totalBtc
+                upbitDataRaw,
+                binanceDataRaw,
+                fearGreedRaw,
+                exchangeRateRaw,
+                totalBtcRaw
             ] = await Promise.all([
                 fetchWithRetry('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://api.upbit.com/v1/ticker?markets=KRW-BTC'), {
                     retries: 3,
@@ -200,43 +200,35 @@ document.addEventListener('DOMContentLoaded', async function() {
                 })
             ]);
 
-            // 에러 처리 및 재시도 함수
-            function handleError(error) {
-                console.error('Error fetching data:', error);
-                
-                // 에러 메시지 표시
-                const errorMessage = error.name === 'AbortError' ? 
-                    '연결 지연' : 
-                    '에러 발생';
-
-                elements.upbitPrice.textContent = errorMessage;
-                elements.binancePrice.textContent = errorMessage;
-                elements.upbitPrice.style.color = '#ff4444';
-                elements.binancePrice.style.color = '#ff4444';
-
-                // 3초 후 재시도
-                setTimeout(() => {
-                    elements.upbitPrice.style.color = '';
-                    elements.binancePrice.style.color = '';
-                    fetchData();
-                }, 3000);
-            }
-
-            // 데이터 추출 및 캐시 업데이트
-            const [upbitData, binanceData, fearGreed, exchangeRate, totalBtc] = await Promise.all([
-                responses[0].json(),
-                responses[1].json(),
-                responses[2].json(),
-                responses[3].json(),
-                responses[4].text()
-            ]);
-
+            // 디버깅용 로그
+            console.log('Raw API responses:', {
+                upbitDataRaw,
+                binanceDataRaw,
+                fearGreedRaw,
+                exchangeRateRaw,
+                totalBtcRaw
+            });
 
             // 값 추출 및 계산
-            const upbitPrice = upbitData[0].trade_price;
-            const binancePrice = parseFloat(binanceData.lastPrice);
-            const usdKrwRate = exchangeRate.rates.KRW;
-            const minedBtc = parseInt(totalBtc) / 100000000;
+            const upbitData = Array.isArray(upbitDataRaw) ? upbitDataRaw[0] : upbitDataRaw;
+            const binanceData = binanceDataRaw;
+            const fearGreed = fearGreedRaw;
+            const exchangeRate = exchangeRateRaw;
+            const totalBtc = parseInt(totalBtcRaw);
+
+            console.log('Parsed data:', {
+                upbitData,
+                binanceData,
+                fearGreed,
+                exchangeRate,
+                totalBtc
+            });
+
+            // 안전한 값 추출
+            const upbitPrice = upbitData?.trade_price || 0;
+            const binancePrice = parseFloat(binanceData?.lastPrice || '0');
+            const usdKrwRate = exchangeRate?.rates?.KRW || 0;
+            const minedBtc = (totalBtc || 0) / 100000000;
             const remainingBtc = 21000000 - minedBtc;
             
             // 김치프리미엄 계산
@@ -250,19 +242,16 @@ document.addEventListener('DOMContentLoaded', async function() {
             previousPrices.upbit = upbitPrice;
             previousPrices.binance = binancePrice;
             
-            // 브라우저 탭 타이틀 업데이트
-            document.title = `BTC $${binancePrice.toLocaleString()} | ₩${upbitPrice.toLocaleString()}`;
-
             // DOM 업데이트
-            elements.upbitPrice.textContent = `${upbitPrice.toLocaleString()}`;
-            elements.binancePrice.textContent = `${binancePrice.toLocaleString()}`;
-            elements.upbitHigh.textContent = `${formatNumber(upbitData[0].high_price)}`;
-            elements.upbitLow.textContent = `${formatNumber(upbitData[0].low_price)}`;
-            elements.upbitVolume.textContent = `${formatNumber(upbitData[0].acc_trade_volume_24h)} BTC`;
-            elements.binanceHigh.textContent = `${formatNumber(parseFloat(binanceData.highPrice))}`;
-            elements.binanceLow.textContent = `${formatNumber(parseFloat(binanceData.lowPrice))}`;
+            elements.upbitPrice.textContent = upbitPrice.toLocaleString();
+            elements.binancePrice.textContent = binancePrice.toLocaleString();
+            elements.upbitHigh.textContent = formatNumber(upbitData.high_price);
+            elements.upbitLow.textContent = formatNumber(upbitData.low_price);
+            elements.upbitVolume.textContent = `${formatNumber(upbitData.acc_trade_volume_24h)} BTC`;
+            elements.binanceHigh.textContent = formatNumber(parseFloat(binanceData.highPrice));
+            elements.binanceLow.textContent = formatNumber(parseFloat(binanceData.lowPrice));
             elements.binanceVolume.textContent = `${formatNumber(parseFloat(binanceData.volume))} BTC`;
-            elements.exchangeRate.textContent = `${usdKrwRate.toLocaleString(undefined, {maximumFractionDigits: 2})}`;
+            elements.exchangeRate.textContent = usdKrwRate.toLocaleString(undefined, {maximumFractionDigits: 2});
             elements.fearGreed.textContent = fearGreed.data[0].value;
             elements.btcMined.textContent = `${minedBtc.toLocaleString()} BTC`;
             elements.btcRemaining.textContent = `${remainingBtc.toLocaleString()} BTC`;
@@ -282,6 +271,11 @@ document.addEventListener('DOMContentLoaded', async function() {
 
         } catch (error) {
             console.error('데이터 가져오기 오류:', error);
+            // 에러 메시지 표시
+            const errorMessage = error.name === 'AbortError' ? '연결 지연' : '에러 발생';
+            Object.values(elements).forEach(element => {
+                if (element) element.textContent = errorMessage;
+            });
             // 5초 후 재시도
             setTimeout(fetchData, 5000);
         }

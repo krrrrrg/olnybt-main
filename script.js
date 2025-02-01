@@ -221,8 +221,9 @@ window.addEventListener(
       e.message.includes("tradingview") ||
       e.filename.includes("tradingview")
     ) {
-      console.warn("TradingView 위젯 경고:", e.message);
-      return false; // 콘솔에 오류 표시 방지
+      // 오류 무시
+      e.preventDefault();
+      return true;
     }
   },
   true
@@ -233,36 +234,4 @@ document.addEventListener("DOMContentLoaded", () => {
   console.log("데이터 로딩 시작...");
   updateAllData();
   setInterval(updateAllData, UPDATE_INTERVAL);
-
-  // TradingView 위젯 로드 상태 체크
-  const tvScript = document.querySelector('script[src*="tradingview"]');
-  if (tvScript) {
-    tvScript.addEventListener("load", () => {
-      console.log("TradingView 위젯 로드 완료");
-    });
-    tvScript.addEventListener("error", () => {
-      console.warn("TradingView 위젯 로드 실패");
-    });
-  }
-});
-
-// TradingView 위젯 설정 수정
-document.addEventListener("DOMContentLoaded", () => {
-  new TradingView.widget({
-    autosize: true,
-    symbol: "BINANCE:BTCUSDT",
-    interval: "15",
-    timezone: "Asia/Seoul",
-    theme: "dark",
-    style: "1",
-    locale: "kr",
-    enable_publishing: false,
-    hide_side_toolbar: false,
-    allow_symbol_change: true,
-    container_id: "tradingview_btc",
-    hide_volume: false,
-    studies: ["MASimple@tv-basicstudies"],
-    disabled_features: ["use_localstorage_for_settings", "study_templates"],
-    enabled_features: [],
-  });
 });

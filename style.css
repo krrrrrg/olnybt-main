@@ -581,9 +581,9 @@ body {
   width: 100%;
   height: 600px;
   margin: 20px 0;
-  background: #1e222d;
   border-radius: 8px;
   overflow: hidden;
+  background: #1e222d;
 }
 
 .tradingview-widget-container {
@@ -592,9 +592,11 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
+  background: #1e222d;
 }
 
 #tradingview_btc {
+  width: 100%;
   height: 100%;
 }
 

@@ -4,14 +4,13 @@ document.addEventListener('DOMContentLoaded', async function() {
         upbitPrice: document.getElementById('upbit-price'),
         binancePrice: document.getElementById('binance-price'),
         exchangeRate: document.getElementById('exchange-rate'),
-        kimchiPremium: document.getElementById('kimchi-premium'),
-        btcDominance: document.getElementById('btc-dominance'),
-        btcMined: document.getElementById('btc-mined'),
-        btcRemaining: document.getElementById('btc-remaining'),
-        fearGreedScore: document.getElementById('fear-greed-score'),
-        fearGreedImage: document.getElementById('fear-greed-image'),
-        toggleMode: document.getElementById('toggle-mode'),
-        tradingviewChart: document.getElementById('tradingview-chart'),
+        fearGreed: document.getElementById('fear-greed'),
+        upbitHigh: document.getElementById('upbit-24h-high'),
+        upbitLow: document.getElementById('upbit-24h-low'),
+        upbitVolume: document.getElementById('upbit-24h-volume'),
+        binanceHigh: document.getElementById('binance-24h-high'),
+        binanceLow: document.getElementById('binance-24h-low'),
+        binanceVolume: document.getElementById('binance-24h-volume'),
         satoshiUsd: document.getElementById('satoshi-usd'),
         satoshiKrw: document.getElementById('satoshi-krw')
     };
@@ -21,48 +20,45 @@ document.addEventListener('DOMContentLoaded', async function() {
         try {
             // 모든 값을 로딩으로 변경
             Object.values(elements).forEach(el => {
-                if (el && el.tagName !== 'IFRAME' && el.tagName !== 'BUTTON' && el.tagName !== 'IMG') {
+                if (el && el.tagName !== 'IFRAME') {
                     el.textContent = '로딩 중...';
                 }
             });
 
             // API 요청
-            const [upbitRes, binanceRes, exchangeRes, btcInfoRes, dominanceRes, fearGreedRes] = await Promise.all([
+            const [upbitTicker, binanceTicker, fearGreedData] = await Promise.all([
                 fetch('https://api.upbit.com/v1/ticker?markets=KRW-BTC'),
-                fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT'),
-                fetch('https://api.exchangerate-api.com/v4/latest/USD'),
-                fetch('https://api.blockchain.info/q/totalbc'),
-                fetch('https://api.coingecko.com/api/v3/global'),
+                fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'),
                 fetch('https://api.alternative.me/fng/?limit=1')
             ]);
 
             // 데이터 추출
-            const upbitData = await upbitRes.json();
-            const binanceData = await binanceRes.json();
-            const exchangeData = await exchangeRes.json();
-            const btcInfoData = await btcInfoRes.json();
-            const dominanceData = await dominanceRes.json();
-            const fearGreedData = await fearGreedRes.json();
+            const upbitData = await upbitTicker.json();
+            const binanceData = await binanceTicker.json();
+            const fearGreed = await fearGreedData.json();
 
-            // 값 계산
+            // 값 추출 및 계산
             const upbitPrice = upbitData[0].trade_price;
-            const binancePrice = parseFloat(binanceData.price);
-            const exchangeRate = exchangeData.rates.KRW;
-            const kimchiPremium = ((upbitPrice / (binancePrice * exchangeRate)) - 1) * 100;
-            const totalBtcMined = btcInfoData / 100000000;
-            const btcRemaining = 21000000 - totalBtcMined;
-            const btcDominance = dominanceData.data.market_cap_percentage.btc;
+            const binancePrice = parseFloat(binanceData.lastPrice);
+            const exchangeRate = upbitPrice / binancePrice;
             
-            // 화면 업데이트
-            elements.upbitPrice.textContent = `${upbitPrice.toLocaleString()} KRW`;
-            elements.binancePrice.textContent = `${binancePrice.toLocaleString()} USD`;
-            elements.exchangeRate.textContent = exchangeRate.toFixed(2);
-            elements.kimchiPremium.textContent = `${kimchiPremium.toFixed(2)}%`;
-            elements.btcMined.textContent = `${totalBtcMined.toLocaleString()} BTC`;
-            elements.btcRemaining.textContent = `${btcRemaining.toLocaleString()} BTC`;
-            elements.btcDominance.textContent = `${btcDominance.toFixed(2)}%`;
-            elements.fearGreedScore.textContent = fearGreedData.data[0].value;
-            elements.fearGreedImage.src = `https://alternative.me/crypto/fear-and-greed-index.png?${Date.now()}`;
+            // 업비트 데이터 업데이트
+            elements.upbitPrice.textContent = `${upbitData[0].trade_price.toLocaleString()} KRW`;
+            elements.upbitHigh.textContent = `${upbitData[0].high_price.toLocaleString()}`;
+            elements.upbitLow.textContent = `${upbitData[0].low_price.toLocaleString()}`;
+            elements.upbitVolume.textContent = `${upbitData[0].acc_trade_volume_24h.toFixed(2)} BTC`;
+
+            // 바이낸스 데이터 업데이트
+            elements.binancePrice.textContent = `${parseFloat(binanceData.lastPrice).toLocaleString()} USD`;
+            elements.binanceHigh.textContent = `${parseFloat(binanceData.highPrice).toLocaleString()}`;
+            elements.binanceLow.textContent = `${parseFloat(binanceData.lowPrice).toLocaleString()}`;
+            elements.binanceVolume.textContent = `${parseFloat(binanceData.volume).toFixed(2)} BTC`;
+
+            // 환율 업데이트
+            elements.exchangeRate.textContent = `${exchangeRate.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+
+            // 공포/탐욕 지수 업데이트
+            elements.fearGreed.textContent = fearGreed.data[0].value;
 
             // 사토시 가격 계산 및 업데이트
             const satoshiUsd = binancePrice / 100000000;

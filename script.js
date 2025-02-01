@@ -203,10 +203,6 @@ document.addEventListener('DOMContentLoaded', async function() {
                 cacheKey: 'totalBtc',
                 timeout: 8000
             });
-            
-            // 이전 Promise.all 방식 제거
-
-            ]);
 
             // 디버깅용 로그
             console.log('Raw API responses:', {

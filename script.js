@@ -1,7 +1,8 @@
 // API 엔드포인트
 const BINANCE_API = "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT";
 const UPBIT_API = "https://api.upbit.com/v1/ticker?markets=KRW-BTC";
-const EXCHANGE_RATE_API = "https://api.exchangerate-api.com/v4/latest/USD";
+const EXCHANGE_RATE_API =
+  "https://quotation-api-cdn.dunamu.com/v1/forex/recent?codes=FRX.KRWUSD";
 const FEAR_GREED_API = "https://api.alternative.me/fng/";
 
 // CORS 프록시 URL (여러 옵션 제공)
@@ -35,39 +36,23 @@ const formatNumber = (number, decimals = 2) => {
 // Binance 데이터 가져오기
 async function fetchBinanceData() {
   try {
-    const response = await fetch(BINANCE_API, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        // Binance API 요청에 필요한 추가 헤더
-      },
-      mode: "cors", // CORS 모드 명시
-    });
+    const response = await fetch(
+      "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT",
+      {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
 
     const data = await response.json();
 
-    document.getElementById("binance-price").textContent = `$${formatNumber(
-      data.lastPrice
-    )}`;
-    document.getElementById("binance-24h-high").textContent = `$${formatNumber(
-      data.highPrice
-    )}`;
-    document.getElementById("binance-24h-low").textContent = `$${formatNumber(
-      data.lowPrice
-    )}`;
-    document.getElementById("binance-24h-volume").textContent = `${formatNumber(
-      data.volume,
-      1
-    )} BTC`;
-
-    return parseFloat(data.lastPrice);
-  } catch (error) {
-    // 첫 번째 시도 실패시 프록시 사용 시도
-    try {
-      const proxy = getNextProxy();
-      const response = await fetch(proxy + encodeURIComponent(BINANCE_API));
-      const data = await response.json();
-
+    if (data && data.lastPrice) {
       document.getElementById("binance-price").textContent = `$${formatNumber(
         data.lastPrice
       )}`;
@@ -82,34 +67,51 @@ async function fetchBinanceData() {
       ).textContent = `${formatNumber(data.volume, 1)} BTC`;
 
       return parseFloat(data.lastPrice);
-    } catch (proxyError) {
-      console.error("Binance 데이터 조회 실패:", proxyError);
-      return null;
     }
+    return null;
+  } catch (error) {
+    console.error("Binance 데이터 조회 실패:", error);
+    return null;
   }
 }
 
 // Upbit 데이터 가져오기
 async function fetchUpbitData() {
   try {
-    const response = await fetch(UPBIT_API);
+    const response = await fetch(
+      "https://api.upbit.com/v1/ticker?markets=KRW-BTC",
+      {
+        method: "GET",
+        headers: {
+          Accept: "application/json",
+        },
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     const [data] = await response.json();
 
-    document.getElementById("upbit-price").textContent = `₩${formatNumber(
-      data.trade_price
-    )}`;
-    document.getElementById("upbit-24h-high").textContent = `₩${formatNumber(
-      data.high_price
-    )}`;
-    document.getElementById("upbit-24h-low").textContent = `₩${formatNumber(
-      data.low_price
-    )}`;
-    document.getElementById("upbit-24h-volume").textContent = `${formatNumber(
-      data.acc_trade_volume_24h,
-      1
-    )} BTC`;
+    if (data && data.trade_price) {
+      document.getElementById("upbit-price").textContent = `₩${formatNumber(
+        data.trade_price
+      )}`;
+      document.getElementById("upbit-24h-high").textContent = `₩${formatNumber(
+        data.high_price
+      )}`;
+      document.getElementById("upbit-24h-low").textContent = `₩${formatNumber(
+        data.low_price
+      )}`;
+      document.getElementById("upbit-24h-volume").textContent = `${formatNumber(
+        data.acc_trade_volume_24h,
+        1
+      )} BTC`;
 
-    return parseFloat(data.trade_price);
+      return parseFloat(data.trade_price);
+    }
+    return null;
   } catch (error) {
     console.error("Upbit 데이터 조회 실패:", error);
     return null;
@@ -119,9 +121,16 @@ async function fetchUpbitData() {
 // 환율 데이터 가져오기
 async function fetchExchangeRate() {
   try {
-    const response = await fetch(EXCHANGE_RATE_API);
-    const data = await response.json();
-    const rate = data.rates.KRW;
+    const response = await fetch(
+      "https://quotation-api-cdn.dunamu.com/v1/forex/recent?codes=FRX.KRWUSD"
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const [data] = await response.json();
+    const rate = data.basePrice;
 
     document.getElementById("exchange-rate").textContent = `${formatNumber(
       rate
@@ -137,6 +146,11 @@ async function fetchExchangeRate() {
 async function fetchFearGreedIndex() {
   try {
     const response = await fetch(FEAR_GREED_API);
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
     const data = await response.json();
     const value = data.data[0].value;
     const classification = getFearGreedClassification(value);
@@ -216,6 +230,7 @@ window.addEventListener(
 
 // DOMContentLoaded 이벤트 리스너 내부
 document.addEventListener("DOMContentLoaded", () => {
+  console.log("데이터 로딩 시작...");
   updateAllData();
   setInterval(updateAllData, UPDATE_INTERVAL);
 
@@ -229,4 +244,25 @@ document.addEventListener("DOMContentLoaded", () => {
       console.warn("TradingView 위젯 로드 실패");
     });
   }
+});
+
+// TradingView 위젯 설정 수정
+document.addEventListener("DOMContentLoaded", () => {
+  new TradingView.widget({
+    autosize: true,
+    symbol: "BINANCE:BTCUSDT",
+    interval: "15",
+    timezone: "Asia/Seoul",
+    theme: "dark",
+    style: "1",
+    locale: "kr",
+    enable_publishing: false,
+    hide_side_toolbar: false,
+    allow_symbol_change: true,
+    container_id: "tradingview_btc",
+    hide_volume: false,
+    studies: ["MASimple@tv-basicstudies"],
+    disabled_features: ["use_localstorage_for_settings", "study_templates"],
+    enabled_features: [],
+  });
 });

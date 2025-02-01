@@ -185,7 +185,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         } else if (url.includes("binance.com")) {
           data = {
             price: rawData.price,
-            volume: "0", // 24시간 거래량은 현재 API에서 제공하지 않음
           };
         } else {
           data = rawData;
@@ -226,21 +225,16 @@ document.addEventListener("DOMContentLoaded", async function () {
       const upbitData = Array.isArray(upbitDataRaw)
         ? upbitDataRaw[0]
         : upbitDataRaw;
-      const binanceData = {
-        price: binanceDataRaw.price || "0",
-      };
-
-      const upbitPrice = upbitData?.trade_price || 0;
-      const binancePrice = parseFloat(binanceData.price || "0");
+      const binancePrice = parseFloat(binanceDataRaw?.price || "0");
       const usdKrwRate = exchangeRateRaw?.rates?.KRW || 1300;
       const fearGreedValue = fearGreedRaw?.data?.[0]?.value || "0";
 
       const minedBtc = parseInt(totalBtcRaw) / 100000000;
       const remainingBtc = 21000000 - minedBtc;
 
-      updatePrices(upbitPrice, binancePrice, usdKrwRate, fearGreedValue);
-      updateDetails(upbitData, binanceData);
-      updateKimchiPremium(upbitPrice, binancePrice, usdKrwRate);
+      updatePrices(upbitData, binancePrice, usdKrwRate, fearGreedValue);
+      updateDetails(upbitData, binanceDataRaw);
+      updateKimchiPremium(upbitData, binancePrice, usdKrwRate);
       updateMiningInfo(minedBtc, remainingBtc);
     } catch (error) {
       console.error("데이터 가져오기 오류:", error);
@@ -248,15 +242,18 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
   }
 
-  function updatePrices(upbitPrice, binancePrice, usdKrwRate, fearGreedValue) {
-    elements.upbitPrice.textContent = upbitPrice.toLocaleString();
+  function updatePrices(upbitData, binancePrice, usdKrwRate, fearGreedValue) {
+    elements.upbitPrice.textContent =
+      upbitData?.trade_price?.toLocaleString() || "0";
     elements.binancePrice.textContent = binancePrice.toLocaleString();
     elements.exchangeRate.textContent = usdKrwRate.toLocaleString();
     elements.fearGreed.textContent = fearGreedValue;
     elements.satoshiUsd.textContent = `$${(binancePrice / 100000000).toFixed(
       8
     )}`;
-    elements.satoshiKrw.textContent = `₩${(upbitPrice / 100000000).toFixed(4)}`;
+    elements.satoshiKrw.textContent = `₩${(
+      upbitData?.trade_price / 100000000
+    ).toFixed(4)}`;
   }
 
   function updateDetails(upbitData, binanceData) {
@@ -269,18 +266,16 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     if (binanceData) {
-      const price = parseFloat(binanceData.price || "0");
+      const price = parseFloat(binanceData?.price || "0");
       elements.binanceHigh.textContent = formatNumber(price);
       elements.binanceLow.textContent = formatNumber(price);
-      elements.binanceVolume.textContent = `${formatNumber(
-        parseFloat(binanceData.volume || "0")
-      )} BTC`;
+      elements.binanceVolume.textContent = `${formatNumber(0)} BTC`;
     }
   }
 
-  function updateKimchiPremium(upbitPrice, binancePrice, usdKrwRate) {
+  function updateKimchiPremium(upbitData, binancePrice, usdKrwRate) {
     const kimchiPremiumValue = (
-      (upbitPrice / (binancePrice * usdKrwRate) - 1) *
+      (upbitData?.trade_price / (binancePrice * usdKrwRate) - 1) *
       100
     ).toFixed(2);
     elements.kimchiPremium.textContent = `${kimchiPremiumValue}%`;
@@ -346,17 +341,12 @@ document.addEventListener("DOMContentLoaded", async function () {
       const upbitData = Array.isArray(upbitDataRaw)
         ? upbitDataRaw[0]
         : upbitDataRaw;
-      const binanceData = {
-        price: binanceDataRaw.price || "0",
-      };
-
-      const upbitPrice = upbitData?.trade_price || 0;
-      const binancePrice = parseFloat(binanceData.price || "0");
+      const binancePrice = parseFloat(binanceDataRaw?.price || "0");
       const usdKrwRate = exchangeRateRaw?.rates?.KRW || 1300;
 
       updatePriceWithAnimation(
         elements.upbitPrice,
-        upbitPrice,
+        upbitData?.trade_price || 0,
         previousPrices.upbit
       );
       updatePriceWithAnimation(
@@ -370,12 +360,12 @@ document.addEventListener("DOMContentLoaded", async function () {
       elements.satoshiUsd.textContent = `$${(binancePrice / 100000000).toFixed(
         8
       )}`;
-      elements.satoshiKrw.textContent = `₩${(upbitPrice / 100000000).toFixed(
-        4
-      )}`;
+      elements.satoshiKrw.textContent = `₩${(
+        upbitData?.trade_price / 100000000
+      ).toFixed(4)}`;
 
       const kimchiPremiumValue = (
-        (upbitPrice / (binancePrice * usdKrwRate) - 1) *
+        (upbitData?.trade_price / (binancePrice * usdKrwRate) - 1) *
         100
       ).toFixed(2);
       elements.kimchiPremium.textContent = `${kimchiPremiumValue}%`;
@@ -384,7 +374,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         parseFloat(kimchiPremiumValue) >= 3
       );
 
-      previousPrices.upbit = upbitPrice;
+      previousPrices.upbit = upbitData?.trade_price || 0;
       previousPrices.binance = binancePrice;
     } catch (error) {
       console.error("가격 데이터 가져오기 오류:", error);

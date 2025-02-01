@@ -87,28 +87,59 @@ async function fetchBinanceData() {
   }
 }
 
-// Upbit 데이터 가져오기
-async function fetchUpbitData() {
-  const data = await fetchData(UPBIT_API);
-  if (data?.[0]?.tradePrice) {
-    document.getElementById("upbit-price").textContent = `₩${formatNumber(
-      data[0].tradePrice
-    )}`;
-    document.getElementById("upbit-24h-high").textContent = `₩${formatNumber(
-      data[0].highPrice
-    )}`;
-    document.getElementById("upbit-24h-low").textContent = `₩${formatNumber(
-      data[0].lowPrice
-    )}`;
-    document.getElementById("upbit-24h-volume").textContent = `${formatNumber(
-      data[0].tradeVolume,
-      1
-    )} BTC`;
-    return parseFloat(data[0].tradePrice);
-  } else {
-    document.getElementById("upbit-price").textContent = "일시적 오류";
-    return null;
-  }
+// Upbit 웹소켓 설정
+function setupUpbitWebSocket() {
+  const ws = new WebSocket("wss://api.upbit.com/websocket/v1");
+
+  ws.onopen = () => {
+    const message = JSON.stringify([
+      { ticket: "ticker" },
+      { type: "ticker", codes: ["KRW-BTC"] },
+    ]);
+    ws.send(message);
+  };
+
+  ws.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (data?.trade_price) {
+        document.getElementById("upbit-price").textContent = `₩${formatNumber(
+          data.trade_price
+        )}`;
+        document.getElementById(
+          "upbit-24h-high"
+        ).textContent = `₩${formatNumber(data.high_price)}`;
+        document.getElementById("upbit-24h-low").textContent = `₩${formatNumber(
+          data.low_price
+        )}`;
+        document.getElementById(
+          "upbit-24h-volume"
+        ).textContent = `${formatNumber(data.acc_trade_volume_24h, 1)} BTC`;
+
+        // 김치프리미엄 계산을 위해 가격 저장
+        window.upbitPrice = data.trade_price;
+        calculateKimchiPremium(
+          window.upbitPrice,
+          window.binancePrice,
+          window.exchangeRate
+        );
+      }
+    } catch (error) {
+      console.error("Upbit 웹소켓 데이터 처리 실패:", error);
+    }
+  };
+
+  ws.onerror = (error) => {
+    console.error("Upbit 웹소켓 에러:", error);
+  };
+
+  ws.onclose = () => {
+    console.log("Upbit 웹소켓 연결 종료");
+    // 연결이 끊어지면 3초 후 재연결 시도
+    setTimeout(setupUpbitWebSocket, 3000);
+  };
+
+  return ws;
 }
 
 // 환율 데이터 가져오기
@@ -277,7 +308,15 @@ window.addEventListener(
 document.addEventListener("DOMContentLoaded", () => {
   console.log("데이터 로딩 시작...");
 
+  // Upbit 웹소켓 연결
+  const upbitWs = setupUpbitWebSocket();
+
   // 다른 데이터 업데이트
   updateAllData();
   setInterval(updateAllData, UPDATE_INTERVAL);
+
+  // 페이지 언로드 시 웹소켓 연결 종료
+  window.addEventListener("beforeunload", () => {
+    upbitWs.close();
+  });
 });

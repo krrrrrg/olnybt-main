@@ -169,11 +169,15 @@ document.addEventListener('DOMContentLoaded', async function() {
                 exchangeRate,
                 totalBtc
             ] = await Promise.all([
-                fetchWithRetry('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=krw,usd&include_24hr_change=true', {
+                fetchWithRetry('https://api.upbit.com/v1/ticker?markets=KRW-BTC', {
                     retries: 3,
                     delay: 1000,
-                    timeout: 5000,
-                    cacheKey: 'price'
+                    timeout: 5000
+                }),
+                fetchWithRetry('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT', {
+                    retries: 3,
+                    delay: 1000,
+                    timeout: 5000
                 }),
                 fetchWithRetry('https://api.alternative.me/fng/?limit=1', {
                     retries: 2,
@@ -218,11 +222,12 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
 
             // 데이터 추출 및 캐시 업데이트
-            const [priceData, fearGreed, exchangeRate, totalBtc] = await Promise.all([
+            const [upbitData, binanceData, fearGreed, exchangeRate, totalBtc] = await Promise.all([
                 responses[0].json(),
                 responses[1].json(),
                 responses[2].json(),
-                responses[3].text()
+                responses[3].json(),
+                responses[4].text()
             ]);
 
 

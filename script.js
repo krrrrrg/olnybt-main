@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             updatePriceWithAnimation(elements.binancePrice, binancePrice, previousPrices.binance);
 
             // 브라우저 탭 타이틀 업데이트
-            document.title = `$${binancePrice.toLocaleString()} | ₩${upbitPrice.toLocaleString()} BTC`;
+            document.title = `${(binancePrice / upbitPrice).toFixed(4)} BTC`;
 
             // 이전 가격 업데이트
             previousPrices.upbit = upbitPrice;

@@ -93,7 +93,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       proxy: "https://api.allorigins.win/raw?url=",
     },
     binance: {
-      url: "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT",
+      url: "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT",
       proxy: "https://api.allorigins.win/raw?url=",
     },
     exchangeRate: {
@@ -105,6 +105,38 @@ document.addEventListener("DOMContentLoaded", async function () {
       proxy: "https://api.allorigins.win/raw?url=",
     },
   };
+
+  // 업데이트 간격 수정
+  const UPDATE_INTERVALS = {
+    price: 5000, // 가격 5초마다
+    volume: 60000, // 거래량 1분마다
+    other: 300000, // 기타 정보 5분마다
+  };
+
+  // 이전 가격을 저장할 변수 추가
+  let previousPrices = {
+    upbit: 0,
+    binance: 0,
+  };
+
+  function updatePriceWithAnimation(element, newPrice, previousPrice) {
+    if (previousPrice > 0) {
+      // 가격 변동에 따른 클래스 추가
+      element.classList.remove("price-up", "price-down");
+      if (newPrice > previousPrice) {
+        element.classList.add("price-up");
+      } else if (newPrice < previousPrice) {
+        element.classList.add("price-down");
+      }
+
+      // 애니메이션 종료 후 클래스 제거
+      setTimeout(() => {
+        element.classList.remove("price-up", "price-down");
+      }, 500);
+    }
+
+    element.textContent = newPrice.toLocaleString();
+  }
 
   // API 요청 함수 수정
   async function fetchWithRetry(endpoint, options = {}) {
@@ -208,12 +240,10 @@ document.addEventListener("DOMContentLoaded", async function () {
           ? { lastPrice: "0", highPrice: "0", lowPrice: "0", volume: "0" }
           : {
               lastPrice:
-                binanceDataRaw.lastPrice || binanceDataRaw.price || "0",
-              highPrice:
-                binanceDataRaw.highPrice || binanceDataRaw.price || "0",
-              lowPrice: binanceDataRaw.lowPrice || binanceDataRaw.price || "0",
-              volume:
-                binanceDataRaw.volume || binanceDataRaw.quoteVolume || "0",
+                binanceDataRaw.price || binanceDataRaw.lastPrice || "0",
+              highPrice: binanceDataRaw.price || "0",
+              lowPrice: binanceDataRaw.price || "0",
+              volume: binanceDataRaw.volume || "0",
             };
 
       const upbitPrice = upbitData?.trade_price || 0;
@@ -257,12 +287,11 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     if (binanceData) {
-      elements.binanceHigh.textContent = formatNumber(
-        parseFloat(binanceData.highPrice || "0")
+      const price = parseFloat(
+        binanceData.lastPrice || binanceData.price || "0"
       );
-      elements.binanceLow.textContent = formatNumber(
-        parseFloat(binanceData.lowPrice || "0")
-      );
+      elements.binanceHigh.textContent = formatNumber(price);
+      elements.binanceLow.textContent = formatNumber(price);
       elements.binanceVolume.textContent = `${formatNumber(
         parseFloat(binanceData.volume || "0")
       )} BTC`;
@@ -295,6 +324,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       if (error.message.includes("429")) return "요청 한도 초과";
       if (error.message.includes("404")) return "데이터 없음";
       if (error.message.includes("500")) return "서버 오류";
+      if (error.message.includes("undefined")) return "데이터 로드 중...";
       return "일시적 오류";
     })();
 
@@ -320,20 +350,66 @@ document.addEventListener("DOMContentLoaded", async function () {
     }, retryDelay);
   }
 
+  // 데이터 가져오기 함수 분리
+  async function fetchPriceData() {
+    try {
+      const [upbitDataRaw, binanceDataRaw] = await Promise.all([
+        fetchWithRetry(API_ENDPOINTS.upbit),
+        fetchWithRetry(API_ENDPOINTS.binance),
+      ]);
+
+      // 가격 데이터 처리 및 업데이트
+      const upbitData = Array.isArray(upbitDataRaw)
+        ? upbitDataRaw[0]
+        : upbitDataRaw;
+      const binanceData =
+        binanceDataRaw.code === 0
+          ? { lastPrice: "0" }
+          : { lastPrice: binanceDataRaw.price || "0" };
+
+      const upbitPrice = upbitData?.trade_price || 0;
+      const binancePrice = parseFloat(binanceData?.lastPrice || "0");
+
+      // 가격 업데이트 및 애니메이션
+      updatePriceWithAnimation(
+        elements.upbitPrice,
+        upbitPrice,
+        previousPrices.upbit
+      );
+      updatePriceWithAnimation(
+        elements.binancePrice,
+        binancePrice,
+        previousPrices.binance
+      );
+
+      // 이전 가격 업데이트
+      previousPrices.upbit = upbitPrice;
+      previousPrices.binance = binancePrice;
+    } catch (error) {
+      console.error("가격 데이터 가져오기 오류:", error);
+      handleError(error);
+    }
+  }
+
+  // 초기화 부분 수정
   // 초기 데이터 가져오기
   fetchData();
+  fetchPriceData();
 
-  // 1분마다 데이터 갱신
-  const updateInterval = 60000; // 1분
-  let updateTimer = setInterval(fetchData, updateInterval);
+  // 주기적 업데이트 설정
+  const priceTimer = setInterval(fetchPriceData, UPDATE_INTERVALS.price);
+  const dataTimer = setInterval(fetchData, UPDATE_INTERVALS.volume);
 
-  // 탭이 비활성화될 때 업데이트 중지
+  // 탭 비활성화 처리 수정
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
-      clearInterval(updateTimer);
+      clearInterval(priceTimer);
+      clearInterval(dataTimer);
     } else {
+      fetchPriceData();
       fetchData();
-      updateTimer = setInterval(fetchData, updateInterval);
+      priceTimer = setInterval(fetchPriceData, UPDATE_INTERVALS.price);
+      dataTimer = setInterval(fetchData, UPDATE_INTERVALS.volume);
     }
   });
 });

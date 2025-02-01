@@ -357,26 +357,38 @@ body {
   transition: color 0.3s ease;
 }
 
-@keyframes priceChange {
-  0% {
-    transform: scale(1);
-  }
-  50% {
-    transform: scale(1.05);
-  }
-  100% {
-    transform: scale(1);
-  }
-}
-
 .price-up {
-  color: #ef4444 !important;
-  animation: priceChange 0.3s ease;
+  color: #00c853;
+  animation: priceUp 0.5s ease;
 }
 
 .price-down {
-  color: #3b82f6 !important;
-  animation: priceChange 0.3s ease;
+  color: #ff1744;
+  animation: priceDown 0.5s ease;
+}
+
+@keyframes priceUp {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes priceDown {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(5px);
+  }
+  100% {
+    transform: translateY(0);
+  }
 }
 
 .premium-high {

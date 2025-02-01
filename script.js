@@ -1,11 +1,15 @@
 // API 엔드포인트 정리
 const ENDPOINTS = {
-  BINANCE: "/api/binance",
-  EXCHANGE_RATE: "/api/exchange",
+  BINANCE: "https://api1.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT",
+  EXCHANGE_RATE: "https://api.exchangerate-api.com/v4/latest/USD",
   FEAR_GREED: "https://api.alternative.me/fng/",
-  BLOCKCHAIN: "/api/blockchain",
+  BLOCKCHAIN: "https://blockchain.info/q/totalbc",
   UPBIT_WS: "wss://api.upbit.com/websocket/v1",
 };
+
+// CORS 프록시 설정
+const CORS_PROXY = "https://proxy.cors.sh/";
+const PROXY_API_KEY = "temp_d89c2c8b46d96b86aa0c11ddd3dd"; // 임시 키, 나중에 변경 필요
 
 // 불필요한 프록시 관련 코드 제거
 const UPDATE_INTERVAL = 15000;
@@ -18,17 +22,18 @@ const formatNumber = (number, decimals = 2) => {
   });
 };
 
-// API 호출 함수 수정 - 헤더 단순화
+// API 호출 함수 수정
 async function fetchData(url) {
   const retries = 3;
   let lastError;
 
   for (let i = 0; i < retries; i++) {
     try {
-      const response = await fetch(url, {
+      const response = await fetch(CORS_PROXY + url, {
         method: "GET",
         headers: {
           Accept: "application/json",
+          "x-cors-api-key": PROXY_API_KEY,
         },
       });
 
@@ -216,12 +221,16 @@ function updateSatoshiValue(binancePrice, upbitPrice) {
 // 채굴 데이터 가져오기 함수 수정
 async function fetchMiningData() {
   try {
-    const response = await fetch(ENDPOINTS.BLOCKCHAIN);
+    const response = await fetch(CORS_PROXY + ENDPOINTS.BLOCKCHAIN, {
+      headers: {
+        "x-cors-api-key": PROXY_API_KEY,
+      },
+    });
     if (!response.ok) throw new Error("Blockchain API 응답 오류");
 
     const totalMinedSatoshi = await response.text();
-    const totalMinedBTC = parseInt(totalMinedSatoshi) / 100000000; // satoshi to BTC
-    const remainingBTC = 21000000 - totalMinedBTC; // 남은 채굴량 계산
+    const totalMinedBTC = parseInt(totalMinedSatoshi) / 100000000;
+    const remainingBTC = 21000000 - totalMinedBTC;
 
     document.getElementById("btc-mined").textContent = `${formatNumber(
       totalMinedBTC,

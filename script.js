@@ -233,8 +233,33 @@ async function fetchMiningData() {
     const response = await fetch(ENDPOINTS.BLOCKCHAIN);
     if (!response.ok) throw new Error("Blockchain API 응답 오류");
 
-    const blockHeight = await response.text();
-    const totalMinedBTC = parseInt(blockHeight) * 6.25 + 7500000; // 초기 채굴량 포함
+    const blockHeight = parseInt(await response.text());
+    let totalMinedBTC = 0;
+
+    // 첫 번째 구간 (1-210000 블록): 50 BTC
+    if (blockHeight <= 210000) {
+      totalMinedBTC = blockHeight * 50;
+    } else {
+      totalMinedBTC = 210000 * 50; // 첫 번째 구간 전체
+
+      // 두 번째 구간 (210001-420000 블록): 25 BTC
+      if (blockHeight <= 420000) {
+        totalMinedBTC += (blockHeight - 210000) * 25;
+      } else {
+        totalMinedBTC += 210000 * 25; // 두 번째 구간 전체
+
+        // 세 번째 구간 (420001-630000 블록): 12.5 BTC
+        if (blockHeight <= 630000) {
+          totalMinedBTC += (blockHeight - 420000) * 12.5;
+        } else {
+          totalMinedBTC += 210000 * 12.5; // 세 번째 구간 전체
+
+          // 네 번째 구간 (630001- 블록): 6.25 BTC
+          totalMinedBTC += (blockHeight - 630000) * 6.25;
+        }
+      }
+    }
+
     const remainingBTC = 21000000 - totalMinedBTC;
 
     document.getElementById("btc-mined").textContent = `${formatNumber(

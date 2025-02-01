@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>비트코인 좋게보이너</title>
+    <title>비트코인 모니터</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
             <div class="header-content">
                 <div class="logo">
                     <i class="fab fa-bitcoin"></i>
-                    <h1>비트코인 좋게보이너</h1>
+                    <h1>비트코인 모니터</h1>
                 </div>
                 <div class="developer-link">
                     개발자 𝕏: <a href="https://x.com/Krrkyakya" target="_blank">@Krrkyakya</a>
@@ -138,34 +138,21 @@
             <div class="chart-container">
                 <section class="chart">
                     <h2>가격 차트</h2>
-                    <!-- TradingView Widget BEGIN -->
-                    <div class="tradingview-widget-container">
-                        <div id="tradingview_chart"></div>
-                    </div>
-                    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-                    <script type="text/javascript">
-                    new TradingView.widget({
-                        "width": "100%",
-                        "height": 500,
-                        "symbol": "BINANCE:BTCUSDT",
-                        "interval": "15",
-                        "timezone": "Asia/Seoul",
-                        "theme": "dark",
-                        "style": "1",
-                        "locale": "kr",
-                        "toolbar_bg": "#f1f3f6",
-                        "enable_publishing": false,
-                        "hide_side_toolbar": false,
-                        "allow_symbol_change": true,
-                        "container_id": "tradingview_chart"
-                    });
-                    </script>
-                    <!-- TradingView Widget END -->
+                    <iframe id="tradingview-chart"
+                        src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_cf2c9&symbol=BINANCE%3ABTCUSDT&interval=15&hidesidetoolbar=0&symboledit=1&saveimage=1&toolbarbg=f1f3f6&studies=%5B%5D&theme=dark&style=1&timezone=Asia%2FSeoul"
+                        allowtransparency="true"
+                        scrolling="no"
+                        allowfullscreen>
+                    </iframe>
                 </section>
             </div>
         </main>
     </div>
 
     <script src="script.js"></script>
+</body>
+</html>
+
+<script src="script.js"></script>
 </body>
 </html>

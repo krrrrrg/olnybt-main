@@ -47,19 +47,29 @@ body {
 
 @media (max-width: 480px) {
     .header-content {
-        padding: 10px 15px;
+        padding: 10px 10px;
+        flex-wrap: wrap;
+    }
+
+    .logo {
+        flex: 1 1 auto;
+        min-width: 0;
     }
 
     .logo i {
-        font-size: 1.4em;
+        font-size: 1.3em;
     }
 
     .logo h1 {
-        font-size: 1.2em;
+        font-size: 1.1em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .developer-link {
         font-size: 0.8em;
+        padding-left: 10px;
     }
 }
 

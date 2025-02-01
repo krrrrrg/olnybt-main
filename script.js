@@ -138,6 +138,12 @@ function setupUpbitWebSocket() {
         window.upbitPrice = price;
         // 타이틀 업데이트
         updatePageTitle(window.binancePrice, window.upbitPrice);
+        // 김치프리미엄 계산 추가
+        calculateKimchiPremium(
+          window.upbitPrice,
+          window.binancePrice,
+          window.exchangeRate
+        );
       }
     } catch (error) {
       console.error("Upbit 웹소켓 데이터 처리 실패:", error);
@@ -163,17 +169,26 @@ async function fetchExchangeRate() {
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
     const data = await response.json();
-    const rate = data.rates.KRW;
-
-    document.getElementById("exchange-rate").textContent = `${formatNumber(
-      rate
-    )}`;
-    return rate;
+    if (data?.rates?.KRW) {
+      const rate = data.rates.KRW;
+      document.getElementById("exchange-rate").textContent = `₩${formatNumber(
+        rate
+      )}`;
+      window.exchangeRate = rate;
+      // 환율 업데이트 시에도 김치프리미엄 재계산
+      calculateKimchiPremium(
+        window.upbitPrice,
+        window.binancePrice,
+        window.exchangeRate
+      );
+      return rate;
+    }
   } catch (error) {
     console.error("환율 데이터 조회 실패:", error);
-    document.getElementById("exchange-rate").textContent = "일시적 오류";
-    return null;
   }
+
+  document.getElementById("exchange-rate").textContent = "일시적 오류";
+  return null;
 }
 
 // 공포/탐욕 지수 가져오기
@@ -208,18 +223,30 @@ function getFearGreedClassification(value) {
 
 // 김치프리미엄 계산
 function calculateKimchiPremium(upbitPrice, binancePrice, exchangeRate) {
-  if (!upbitPrice || !binancePrice || !exchangeRate) return;
+  if (!upbitPrice || !binancePrice || !exchangeRate) {
+    document.getElementById("kimchi-premium").textContent = "로딩 중...";
+    return;
+  }
 
-  const binanceKRW = binancePrice * exchangeRate;
-  const premium = ((upbitPrice - binanceKRW) / binanceKRW) * 100;
-  document.getElementById("kimchi-premium").textContent = `${formatNumber(
-    premium
-  )}%`;
+  try {
+    // 바이낸스 가격을 원화로 변환
+    const binanceKRW = binancePrice * exchangeRate;
+    // 프리미엄 계산: ((업비트가격 - 바이낸스원화가격) / 바이낸스원화가격) * 100
+    const premium = ((upbitPrice - binanceKRW) / binanceKRW) * 100;
+
+    document.getElementById("kimchi-premium").textContent = `${formatNumber(
+      premium,
+      2
+    )}%`;
+  } catch (error) {
+    console.error("김치프리미엄 계산 실패:", error);
+    document.getElementById("kimchi-premium").textContent = "계산 오류";
+  }
 }
 
-// 사토시 가치 계산 함수 수정
+// 사토시 가치 업데이트 함수 단순화
 function updateSatoshiValue(binancePrice, upbitPrice) {
-  // binancePrice가 있으면 USD 계산
+  // USD 사토시 가치
   if (binancePrice) {
     const satoshiUSD = binancePrice / 100000000;
     document.getElementById("satoshi-usd").textContent = `$${formatNumber(
@@ -228,7 +255,7 @@ function updateSatoshiValue(binancePrice, upbitPrice) {
     )}`;
   }
 
-  // upbitPrice가 있으면 KRW 계산
+  // KRW 사토시 가치
   if (upbitPrice) {
     const satoshiKRW = upbitPrice / 100000000;
     document.getElementById("satoshi-krw").textContent = `₩${formatNumber(

@@ -21,6 +21,8 @@
     X-Frame-Options = "DENY"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    Content-Security-Policy = "default-src 'self' https:; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; img-src 'self' https: data:;"
 
 [[redirects]]
   from = "/api/*"
@@ -34,15 +36,18 @@
   to = "https://api1.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT"
   status = 200
   force = true
+  headers = {Access-Control-Allow-Origin = "*"}
 
 [[redirects]]
-  from = "/api/upbit"
-  to = "https://api.upbit.com/v1/ticker?markets=KRW-BTC"
+  from = "/api/exchange"
+  to = "https://api.exchangerate-api.com/v4/latest/USD"
   status = 200
   force = true
+  headers = {Access-Control-Allow-Origin = "*"}
 
 [[redirects]]
   from = "/api/blockchain"
   to = "https://blockchain.info/q/totalbc"
   status = 200
-  force = true 
+  force = true
+  headers = {Access-Control-Allow-Origin = "*"} 

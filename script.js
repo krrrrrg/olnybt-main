@@ -1,29 +1,13 @@
-// API 엔드포인트
-const BINANCE_API =
-  "https://api1.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT";
-const UPBIT_API = "https://api.upbit.com/v1/ticker?markets=KRW-BTC";
-// 무료 환율 API로 변경
-const EXCHANGE_RATE_API = "https://api.exchangerate-api.com/v4/latest/USD";
-const FEAR_GREED_API = "https://api.alternative.me/fng/";
-const BLOCKCHAIN_INFO_API = "https://mempool.space/api/v1/blocks/tip/height";
+// API 엔드포인트 정리
+const ENDPOINTS = {
+  BINANCE: "/api/binance",
+  EXCHANGE_RATE: "/api/exchange",
+  FEAR_GREED: "https://api.alternative.me/fng/",
+  BLOCKCHAIN: "/api/blockchain",
+  UPBIT_WS: "wss://api.upbit.com/websocket/v1",
+};
 
-// 프록시 서버 설정 수정
-const PROXY_URLS = [
-  "https://api.allorigins.win/raw?url=",
-  "https://api.codetabs.com/v1/proxy?quest=",
-  "https://corsproxy.io/?",
-];
-
-let currentProxyIndex = 0;
-
-// 프록시 URL 순환 함수
-function getNextProxy() {
-  const proxy = PROXY_URLS[currentProxyIndex];
-  currentProxyIndex = (currentProxyIndex + 1) % PROXY_URLS.length;
-  return proxy;
-}
-
-// 데이터 업데이트 간격 조정
+// 불필요한 프록시 관련 코드 제거
 const UPDATE_INTERVAL = 15000;
 
 // 숫자 포맷팅 함수
@@ -65,7 +49,7 @@ async function fetchData(url) {
 
 // Binance 데이터 가져오기
 async function fetchBinanceData() {
-  const data = await fetchData(BINANCE_API);
+  const data = await fetchData(ENDPOINTS.BINANCE);
   if (data?.lastPrice) {
     document.getElementById("binance-price").textContent = `$${formatNumber(
       data.lastPrice
@@ -87,13 +71,15 @@ async function fetchBinanceData() {
   }
 }
 
-// Upbit 웹소켓 설정
+// Upbit 웹소켓 설정 수정
 function setupUpbitWebSocket() {
-  const ws = new WebSocket("wss://api.upbit.com/websocket/v1");
+  const ws = new WebSocket(ENDPOINTS.UPBIT_WS);
+
+  ws.binaryType = "arraybuffer";
 
   ws.onopen = () => {
     const message = JSON.stringify([
-      { ticket: "ticker" },
+      { ticket: "UNIQUE_TICKET" },
       { type: "ticker", codes: ["KRW-BTC"] },
     ]);
     ws.send(message);
@@ -101,7 +87,9 @@ function setupUpbitWebSocket() {
 
   ws.onmessage = (event) => {
     try {
-      const data = JSON.parse(event.data);
+      const enc = new TextDecoder("utf-8");
+      const data = JSON.parse(enc.decode(event.data));
+
       if (data?.trade_price) {
         document.getElementById("upbit-price").textContent = `₩${formatNumber(
           data.trade_price
@@ -118,11 +106,13 @@ function setupUpbitWebSocket() {
 
         // 김치프리미엄 계산을 위해 가격 저장
         window.upbitPrice = data.trade_price;
-        calculateKimchiPremium(
-          window.upbitPrice,
-          window.binancePrice,
-          window.exchangeRate
-        );
+        if (window.binancePrice && window.exchangeRate) {
+          calculateKimchiPremium(
+            window.upbitPrice,
+            window.binancePrice,
+            window.exchangeRate
+          );
+        }
       }
     } catch (error) {
       console.error("Upbit 웹소켓 데이터 처리 실패:", error);
@@ -135,7 +125,6 @@ function setupUpbitWebSocket() {
 
   ws.onclose = () => {
     console.log("Upbit 웹소켓 연결 종료");
-    // 연결이 끊어지면 3초 후 재연결 시도
     setTimeout(setupUpbitWebSocket, 3000);
   };
 
@@ -145,7 +134,7 @@ function setupUpbitWebSocket() {
 // 환율 데이터 가져오기
 async function fetchExchangeRate() {
   try {
-    const response = await fetch(EXCHANGE_RATE_API);
+    const response = await fetch(ENDPOINTS.EXCHANGE_RATE);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
     const data = await response.json();
@@ -165,7 +154,7 @@ async function fetchExchangeRate() {
 // 공포/탐욕 지수 가져오기
 async function fetchFearGreedIndex() {
   try {
-    const response = await fetch(FEAR_GREED_API);
+    const response = await fetch(ENDPOINTS.FEAR_GREED);
 
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
@@ -227,7 +216,7 @@ function updateSatoshiValue(binancePrice, upbitPrice) {
 // 채굴 데이터 가져오기 함수 수정
 async function fetchMiningData() {
   try {
-    const response = await fetch("https://blockchain.info/q/totalbc");
+    const response = await fetch(ENDPOINTS.BLOCKCHAIN);
     if (!response.ok) throw new Error("Blockchain API 응답 오류");
 
     const totalMinedSatoshi = await response.text();
@@ -252,19 +241,19 @@ async function fetchMiningData() {
 // 데이터 업데이트 함수 수정
 async function updateAllData() {
   try {
-    const [binancePrice, upbitPrice, exchangeRate] = await Promise.all([
+    const [binancePrice, exchangeRate] = await Promise.all([
       fetchBinanceData().catch(() => null),
-      fetchUpbitData().catch(() => null),
       fetchExchangeRate().catch(() => null),
     ]);
 
-    // 사토시 가치 업데이트
-    updateSatoshiValue(binancePrice, upbitPrice);
+    // binancePrice와 exchangeRate를 전역 변수로 저장
+    window.binancePrice = binancePrice;
+    window.exchangeRate = exchangeRate;
 
-    // 김치프리미엄 계산
-    if (binancePrice && upbitPrice && exchangeRate) {
-      calculateKimchiPremium(upbitPrice, binancePrice, exchangeRate);
-    }
+    // 사토시 가치 업데이트 (upbitPrice는 웹소켓에서 업데이트)
+    updateSatoshiValue(binancePrice, window.upbitPrice);
+
+    // 김치프리미엄은 웹소켓에서 계산됨
 
     // 채굴 데이터 업데이트 (1분에 한 번)
     if (

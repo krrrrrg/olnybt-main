@@ -235,19 +235,10 @@ document.addEventListener("DOMContentLoaded", async function () {
       const upbitData = Array.isArray(upbitDataRaw)
         ? upbitDataRaw[0]
         : upbitDataRaw;
-      const binanceData =
-        binanceDataRaw.code === 0
-          ? { lastPrice: "0", highPrice: "0", lowPrice: "0", volume: "0" }
-          : {
-              lastPrice:
-                binanceDataRaw.price || binanceDataRaw.lastPrice || "0",
-              highPrice: binanceDataRaw.price || "0",
-              lowPrice: binanceDataRaw.price || "0",
-              volume: binanceDataRaw.volume || "0",
-            };
+      const binanceData = binanceDataRaw;
 
       const upbitPrice = upbitData?.trade_price || 0;
-      const binancePrice = parseFloat(binanceData?.lastPrice || "0");
+      const binancePrice = parseFloat(binanceData.price || "0");
       const usdKrwRate = exchangeRateRaw?.rates?.KRW || 1300;
       const fearGreedValue = fearGreedRaw?.data?.[0]?.value || "0";
 
@@ -287,9 +278,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     if (binanceData) {
-      const price = parseFloat(
-        binanceData.lastPrice || binanceData.price || "0"
-      );
+      const price = parseFloat(binanceData.price || "0");
       elements.binanceHigh.textContent = formatNumber(price);
       elements.binanceLow.textContent = formatNumber(price);
       elements.binanceVolume.textContent = `${formatNumber(
@@ -325,6 +314,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       if (error.message.includes("404")) return "데이터 없음";
       if (error.message.includes("500")) return "서버 오류";
       if (error.message.includes("undefined")) return "데이터 로드 중...";
+      if (error.message.includes("aborted")) return "요청 취소됨";
       return "일시적 오류";
     })();
 
@@ -353,22 +343,25 @@ document.addEventListener("DOMContentLoaded", async function () {
   // 데이터 가져오기 함수 분리
   async function fetchPriceData() {
     try {
-      const [upbitDataRaw, binanceDataRaw] = await Promise.all([
-        fetchWithRetry(API_ENDPOINTS.upbit),
-        fetchWithRetry(API_ENDPOINTS.binance),
-      ]);
+      const [upbitDataRaw, binanceDataRaw, exchangeRateRaw] = await Promise.all(
+        [
+          fetchWithRetry(API_ENDPOINTS.upbit),
+          fetchWithRetry(API_ENDPOINTS.binance),
+          fetchWithRetry(API_ENDPOINTS.exchangeRate, {
+            cacheKey: "exchangeRate",
+          }),
+        ]
+      );
 
       // 가격 데이터 처리 및 업데이트
       const upbitData = Array.isArray(upbitDataRaw)
         ? upbitDataRaw[0]
         : upbitDataRaw;
-      const binanceData =
-        binanceDataRaw.code === 0
-          ? { lastPrice: "0" }
-          : { lastPrice: binanceDataRaw.price || "0" };
+      const binanceData = binanceDataRaw;
 
       const upbitPrice = upbitData?.trade_price || 0;
-      const binancePrice = parseFloat(binanceData?.lastPrice || "0");
+      const binancePrice = parseFloat(binanceData.price || "0");
+      const usdKrwRate = exchangeRateRaw?.rates?.KRW || 1300;
 
       // 가격 업데이트 및 애니메이션
       updatePriceWithAnimation(
@@ -380,6 +373,28 @@ document.addEventListener("DOMContentLoaded", async function () {
         elements.binancePrice,
         binancePrice,
         previousPrices.binance
+      );
+
+      // USD/KRW 환율 업데이트
+      elements.exchangeRate.textContent = usdKrwRate.toLocaleString();
+
+      // 사토시 가격 업데이트
+      elements.satoshiUsd.textContent = `$${(binancePrice / 100000000).toFixed(
+        8
+      )}`;
+      elements.satoshiKrw.textContent = `₩${(upbitPrice / 100000000).toFixed(
+        4
+      )}`;
+
+      // 김치프리미엄 업데이트
+      const kimchiPremiumValue = (
+        (upbitPrice / (binancePrice * usdKrwRate) - 1) *
+        100
+      ).toFixed(2);
+      elements.kimchiPremium.textContent = `${kimchiPremiumValue}%`;
+      elements.kimchiPremium.classList.toggle(
+        "premium-high",
+        parseFloat(kimchiPremiumValue) >= 3
       );
 
       // 이전 가격 업데이트
@@ -397,8 +412,8 @@ document.addEventListener("DOMContentLoaded", async function () {
   fetchPriceData();
 
   // 주기적 업데이트 설정
-  const priceTimer = setInterval(fetchPriceData, UPDATE_INTERVALS.price);
-  const dataTimer = setInterval(fetchData, UPDATE_INTERVALS.volume);
+  let priceTimer = setInterval(fetchPriceData, UPDATE_INTERVALS.price);
+  let dataTimer = setInterval(fetchData, UPDATE_INTERVALS.volume);
 
   // 탭 비활성화 처리 수정
   document.addEventListener("visibilitychange", () => {

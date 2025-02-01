@@ -106,19 +106,56 @@ document.addEventListener('DOMContentLoaded', async function() {
     const cacheManager = new CacheManager();
 
     // API 요청 함수
-    async function fetchWithCache(url, cacheKey) {
+    async function fetchWithRetry(url, options = {}) {
+        const {
+            retries = 3,
+            delay = 1000,
+            cacheKey = null,
+            timeout = 5000
+        } = options;
+
+        // 캐시 확인
         if (cacheKey) {
             const cached = cacheManager.get(cacheKey);
             if (cached) return cached;
         }
 
-        const response = await fetch(url);
-        if (!response.ok) throw new Error(`API ${url} failed: ${response.status}`);
-        
-        const data = cacheKey ? await response.json() : await response.text();
-        if (cacheKey) cacheManager.set(cacheKey, data);
-        
-        return data;
+        let lastError;
+        for (let i = 0; i < retries; i++) {
+            try {
+                // 타임아웃 추가
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+                const response = await fetch(url, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(`API ${url} failed: ${response.status}`);
+                }
+
+                const data = cacheKey ? await response.json() : await response.text();
+                if (cacheKey) cacheManager.set(cacheKey, data);
+                return data;
+            } catch (error) {
+                lastError = error;
+                console.warn(`Retry ${i + 1}/${retries} failed for ${url}:`, error);
+                if (i < retries - 1) {
+                    await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+                }
+            }
+        }
+
+        // 모든 재시도 실패 시 캐시된 데이터 반환 (오래되었어도 낫음)
+        if (cacheKey) {
+            const staleCache = cacheManager.getStaleCache(cacheKey);
+            if (staleCache) {
+                console.warn(`Using stale cache for ${url}`);
+                return staleCache;
+            }
+        }
+
+        throw lastError;
     }
 
     // 데이터 가져오기
@@ -132,19 +169,57 @@ document.addEventListener('DOMContentLoaded', async function() {
                 exchangeRate,
                 totalBtc
             ] = await Promise.all([
-                fetchWithCache('https://api.upbit.com/v1/ticker?markets=KRW-BTC'),
-                fetchWithCache('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'),
-                fetchWithCache('https://api.alternative.me/fng/?limit=1', 'fearGreed'),
-                fetchWithCache('https://open.er-api.com/v6/latest/USD', 'exchangeRate'),
-                fetchWithCache('https://blockchain.info/q/totalbc', 'totalBtc')
+                fetchWithRetry('https://api.upbit.com/v1/ticker?markets=KRW-BTC', {
+                    retries: 3,
+                    delay: 1000,
+                    timeout: 5000
+                }),
+                fetchWithRetry('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT', {
+                    retries: 3,
+                    delay: 1000,
+                    timeout: 5000
+                }),
+                fetchWithRetry('https://api.alternative.me/fng/?limit=1', {
+                    retries: 2,
+                    delay: 2000,
+                    cacheKey: 'fearGreed',
+                    timeout: 8000
+                }),
+                fetchWithRetry('https://open.er-api.com/v6/latest/USD', {
+                    retries: 2,
+                    delay: 2000,
+                    cacheKey: 'exchangeRate',
+                    timeout: 8000
+                }),
+                fetchWithRetry('https://blockchain.info/q/totalbc', {
+                    retries: 2,
+                    delay: 2000,
+                    cacheKey: 'totalBtc',
+                    timeout: 8000
+                })
             ]);
 
-            // 응답 확인
-            responses.forEach((response, index) => {
-                if (!response.ok) {
-                    throw new Error(`API ${index + 1} failed: ${response.status}`);
-                }
-            });
+            // 에러 처리 및 재시도 함수
+            function handleError(error) {
+                console.error('Error fetching data:', error);
+                
+                // 에러 메시지 표시
+                const errorMessage = error.name === 'AbortError' ? 
+                    '연결 지연' : 
+                    '에러 발생';
+
+                elements.upbitPrice.textContent = errorMessage;
+                elements.binancePrice.textContent = errorMessage;
+                elements.upbitPrice.style.color = '#ff4444';
+                elements.binancePrice.style.color = '#ff4444';
+
+                // 3초 후 재시도
+                setTimeout(() => {
+                    elements.upbitPrice.style.color = '';
+                    elements.binancePrice.style.color = '';
+                    fetchData();
+                }, 3000);
+            }
 
             // 데이터 추출 및 캐시 업데이트
             const [upbitData, binanceData, fearGreed, exchangeRate, totalBtc] = await Promise.all([

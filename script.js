@@ -135,6 +135,12 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   const cacheManager = new CacheManager();
 
+  // CORS 프록시 URL 업데이트
+  const corsProxies = [
+    "https://cors-anywhere.herokuapp.com/",
+    "https://api.allorigins.win/raw?url=",
+  ];
+
   // API 요청 함수
   async function fetchWithRetry(url, options = {}) {
     const {
@@ -149,11 +155,6 @@ document.addEventListener("DOMContentLoaded", async function () {
       const cached = cacheManager.get(cacheKey);
       if (cached) return cached;
     }
-
-    const corsProxies = [
-      "https://api.allorigins.win/raw?url=",
-      "https://api.codetabs.com/v1/proxy?quest=",
-    ];
 
     let lastError;
     for (let i = 0; i < retries; i++) {
@@ -205,6 +206,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   // 데이터 가져오기
   async function fetchData() {
     try {
+      // 업비트 API
       const upbitDataRaw = await fetchWithRetry(
         "https://api.upbit.com/v1/ticker?markets=KRW-BTC",
         {
@@ -216,8 +218,9 @@ document.addEventListener("DOMContentLoaded", async function () {
 
       await new Promise((resolve) => setTimeout(resolve, 500));
 
+      // 바이낸스 API
       const binanceDataRaw = await fetchWithRetry(
-        "https://api1.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT",
+        "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT",
         {
           retries: 3,
           delay: 1000,
@@ -227,9 +230,9 @@ document.addEventListener("DOMContentLoaded", async function () {
 
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // 환율 정보 가져오기 (하나의 API만 사용)
+      // 환율 API - 더 안정적인 API로 변경
       const exchangeRateRaw = await fetchWithRetry(
-        "https://api.exchangerate-api.com/v4/latest/USD",
+        "https://open.er-api.com/v6/latest/USD",
         {
           retries: 2,
           delay: 1000,
@@ -238,53 +241,30 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
       );
 
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Fear & Greed Index API
+      const fearGreedRaw = await fetch("https://api.alternative.me/fng/")
+        .then((response) => response.json())
+        .catch(() => ({ data: [{ value: "0" }] }));
 
-      const fearGreedRaw = await fetchWithRetry(
-        "https://api.alternative.me/fng/",
-        {
-          retries: 2,
-          delay: 2000,
-          cacheKey: "fearGreed",
-          timeout: 8000,
-        }
-      );
-
-      // 디버깅용 로그 추가
-      console.log("API Responses:", {
+      // 디버깅용 로그
+      console.log("API 응답:", {
         upbit: upbitDataRaw,
         binance: binanceDataRaw,
         exchangeRate: exchangeRateRaw,
         fearGreed: fearGreedRaw,
       });
 
-      // 값 추출 및 계산
-      const upbitData = Array.isArray(upbitDataRaw)
-        ? upbitDataRaw[0]
-        : upbitDataRaw;
-      const binanceData = binanceDataRaw;
-      const fearGreed = fearGreedRaw;
-      const exchangeRate = exchangeRateRaw;
-      // totalBtc가 문자열인 경우 처리
-      const totalBtc =
-        typeof totalBtcRaw === "string" ? parseInt(totalBtcRaw) : totalBtcRaw;
-
-      console.log("Parsed data:", {
-        upbitData,
-        binanceData,
-        fearGreed,
-        exchangeRate,
-        totalBtc,
-        totalBtcRaw,
-      });
-
-      // 안전한 값 추출
-      const upbitPrice = upbitData?.trade_price || 0;
-      const binancePrice = parseFloat(binanceData?.lastPrice || "0");
-      const usdKrwRate = exchangeRate?.rates?.KRW || 1300;
-      const minedBtc = (totalBtc || 0) / 100000000;
-      const remainingBtc = 21000000 - minedBtc;
+      // 데이터 처리 로직
+      const upbitPrice = upbitDataRaw?.[0]?.trade_price || 0;
+      const binancePrice = parseFloat(binanceDataRaw?.lastPrice || "0");
+      const usdKrwRate = exchangeRateRaw?.rates?.KRW || 1300;
       const fearGreedValue = fearGreedRaw?.data?.[0]?.value || "0";
+
+      // DOM 업데이트
+      elements.upbitPrice.textContent = upbitPrice.toLocaleString();
+      elements.binancePrice.textContent = binancePrice.toLocaleString();
+      elements.exchangeRate.textContent = usdKrwRate.toLocaleString();
+      elements.fearGreed.textContent = fearGreedValue;
 
       // 김치프리미엄 계산
       const kimchiPremiumValue = (
@@ -309,34 +289,26 @@ document.addEventListener("DOMContentLoaded", async function () {
       previousPrices.binance = binancePrice;
 
       // DOM 업데이트
-      elements.upbitPrice.textContent = upbitPrice.toLocaleString();
-      elements.binancePrice.textContent = binancePrice.toLocaleString();
-      elements.upbitHigh.textContent = formatNumber(upbitData.high_price);
-      elements.upbitLow.textContent = formatNumber(upbitData.low_price);
+      elements.upbitHigh.textContent = formatNumber(upbitDataRaw[0].high_price);
+      elements.upbitLow.textContent = formatNumber(upbitDataRaw[0].low_price);
       elements.upbitVolume.textContent = `${formatNumber(
-        upbitData.acc_trade_volume_24h
+        upbitDataRaw[0].acc_trade_volume_24h
       )} BTC`;
       elements.binanceHigh.textContent = formatNumber(
-        parseFloat(binanceData.highPrice)
+        parseFloat(binanceDataRaw.highPrice)
       );
       elements.binanceLow.textContent = formatNumber(
-        parseFloat(binanceData.lowPrice)
+        parseFloat(binanceDataRaw.lowPrice)
       );
       elements.binanceVolume.textContent = `${formatNumber(
-        parseFloat(binanceData.volume)
+        parseFloat(binanceDataRaw.volume)
       )} BTC`;
-      elements.exchangeRate.textContent = usdKrwRate.toLocaleString(undefined, {
-        maximumFractionDigits: 2,
-      });
-      elements.fearGreed.textContent = fearGreedValue;
-      elements.btcMined.textContent = `${minedBtc.toLocaleString()} BTC`;
-      elements.btcRemaining.textContent = `${remainingBtc.toLocaleString()} BTC`;
-
-      // 사토시 가격 계산 및 업데이트
-      const satoshiUsd = binancePrice / 100000000;
-      const satoshiKrw = upbitPrice / 100000000;
-      elements.satoshiUsd.textContent = `$${satoshiUsd.toFixed(8)}`;
-      elements.satoshiKrw.textContent = `₩${satoshiKrw.toFixed(4)}`;
+      elements.satoshiUsd.textContent = `$${(binancePrice / 100000000).toFixed(
+        8
+      )}`;
+      elements.satoshiKrw.textContent = `₩${(upbitPrice / 100000000).toFixed(
+        4
+      )}`;
 
       // 김치프리미엄 업데이트
       elements.kimchiPremium.textContent = `${kimchiPremiumValue}%`;

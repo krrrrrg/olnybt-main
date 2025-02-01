@@ -162,41 +162,50 @@ document.addEventListener('DOMContentLoaded', async function() {
     async function fetchData() {
         try {
             // 모든 API 요청 동시 실행
-            const [
-                upbitDataRaw,
-                binanceDataRaw,
-                fearGreedRaw,
-                exchangeRateRaw,
-                totalBtcRaw
-            ] = await Promise.all([
-                fetchWithRetry('https://api.upbit.com/v1/ticker?markets=KRW-BTC', {
-                    retries: 3,
-                    delay: 1000,
-                    timeout: 5000
-                }),
-                fetchWithRetry('https://api1.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT', {
-                    retries: 3,
-                    delay: 1000,
-                    timeout: 5000
-                }),
-                fetchWithRetry('https://api.coinbase.com/v2/prices/BTC-USD/spot', {
-                    retries: 2,
-                    delay: 2000,
-                    cacheKey: 'fearGreed',
-                    timeout: 8000
-                }),
-                fetchWithRetry('https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/usd/krw.json', {
-                    retries: 2,
-                    delay: 2000,
-                    cacheKey: 'exchangeRate',
-                    timeout: 8000
-                }),
-                fetchWithRetry('https://blockchain.info/q/totalbc', {
-                    retries: 2,
-                    delay: 2000,
-                    cacheKey: 'totalBtc',
-                    timeout: 8000
-                })
+            // API 요청들을 순차적으로 처리하여 부하 분산
+            const upbitDataRaw = await fetchWithRetry('https://api.upbit.com/v1/ticker?markets=KRW-BTC', {
+                retries: 3,
+                delay: 1000,
+                timeout: 5000
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 500)); // 0.5초 대기
+            
+            const binanceDataRaw = await fetchWithRetry('https://api1.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT', {
+                retries: 3,
+                delay: 1000,
+                timeout: 5000
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 500)); // 0.5초 대기
+            
+            const fearGreedRaw = await fetchWithRetry('https://api.coinbase.com/v2/prices/BTC-USD/spot', {
+                retries: 2,
+                delay: 2000,
+                cacheKey: 'fearGreed',
+                timeout: 8000
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 500)); // 0.5초 대기
+            
+            const exchangeRateRaw = await fetchWithRetry('https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/usd/krw.json', {
+                retries: 2,
+                delay: 2000,
+                cacheKey: 'exchangeRate',
+                timeout: 8000
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 500)); // 0.5초 대기
+            
+            const totalBtcRaw = await fetchWithRetry('https://blockchain.info/q/totalbc', {
+                retries: 2,
+                delay: 2000,
+                cacheKey: 'totalBtc',
+                timeout: 8000
+            });
+            
+            // 이전 Promise.all 방식 제거
+
             ]);
 
             // 디버깅용 로그
@@ -286,6 +295,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     // 초기 데이터 가져오기
     fetchData();
     
-    // 5초마다 데이터 갱신
-    setInterval(fetchData, 5000);
+    // 1분마다 데이터 갱신
+    setInterval(fetchData, 60000);
 });

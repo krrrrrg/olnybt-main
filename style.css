@@ -238,6 +238,10 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 500px;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  touch-action: pan-x;
 }
 
 .price-section .section-title {
@@ -262,6 +266,11 @@ body {
   align-items: center;
   height: 350px;
   justify-content: space-between;
+  transition: transform 0.3s ease;
+  min-width: 100%;
+  position: absolute;
+  left: 0;
+  top: 0;
 }
 
 .price-card > * {
@@ -513,9 +522,10 @@ body {
   width: 100%;
   height: 600px;
   margin: 20px 0;
-  border-radius: 8px;
+  padding: 20px;
+  border-radius: 12px;
   overflow: hidden;
-  background: #1e222d;
+  background: var(--card-bg);
 }
 
 .tradingview-widget-container {
@@ -537,6 +547,9 @@ body {
   min-height: 500px;
   position: relative;
   overflow: hidden;
+  height: 600px;
+  margin-bottom: 20px;
+  border-radius: 8px;
 }
 
 .chart h2 {
@@ -714,7 +727,7 @@ body.light-mode {
   }
 
   .price-section {
-    margin-bottom: 0;
+    margin-bottom: 20px;
   }
 
   .price-cards {
@@ -723,6 +736,31 @@ body.light-mode {
 
   .price-card {
     padding: 15px;
+  }
+
+  .chart {
+    height: 400px;
+  }
+
+  /* 스와이프 인디케이터 추가 */
+  .price-indicator {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .indicator-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-secondary);
+    opacity: 0.5;
+  }
+
+  .indicator-dot.active {
+    opacity: 1;
+    background: var(--accent);
   }
 }
 

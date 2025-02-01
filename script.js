@@ -90,7 +90,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     },
     binance: {
       url: "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT",
-      proxy: "https://api.allorigins.win/raw?url=",
+      proxy: "https://corsproxy.io/?",
     },
     exchangeRate: {
       url: "https://open.er-api.com/v6/latest/USD",
@@ -133,9 +133,9 @@ document.addEventListener("DOMContentLoaded", async function () {
   async function fetchWithRetry(endpoint, options = {}) {
     const {
       retries = 3,
-      delay = 1000,
+      delay = 2000,
       cacheKey = null,
-      timeout = 5000,
+      timeout = 8000,
     } = options;
     const { url, proxy } =
       typeof endpoint === "string" ? { url: endpoint, proxy: "" } : endpoint;
@@ -152,10 +152,13 @@ document.addEventListener("DOMContentLoaded", async function () {
         const timeoutId = setTimeout(() => controller.abort(), timeout);
 
         const finalUrl = proxy ? `${proxy}${encodeURIComponent(url)}` : url;
+        console.log(`Fetching: ${finalUrl}`);
+
         const response = await fetch(finalUrl, {
           signal: controller.signal,
           headers: {
             Accept: "application/json",
+            "Cache-Control": "no-cache",
             Origin: window.location.origin,
           },
         });

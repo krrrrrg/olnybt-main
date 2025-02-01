@@ -1,4 +1,3 @@
-// 숫자 포맷팅 함수
 function formatNumber(number) {
   if (number >= 1000000) {
     return (number / 1000000).toFixed(2) + "M";
@@ -9,7 +8,6 @@ function formatNumber(number) {
 }
 
 document.addEventListener("DOMContentLoaded", async function () {
-  // DOM 요소
   const elements = {
     upbitPrice: document.getElementById("upbit-price"),
     binancePrice: document.getElementById("binance-price"),
@@ -28,13 +26,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     btcRemaining: document.getElementById("btc-remaining"),
   };
 
-  // 캐시 관리 클래스
   class CacheManager {
     constructor() {
       this.cache = {};
       this.duration = {
-        exchangeRate: 30 * 60 * 1000, // 30분
-        fearGreed: 60 * 60 * 1000, // 1시간
+        exchangeRate: 30 * 60 * 1000,
+        fearGreed: 60 * 60 * 1000,
       };
       this.loadFromLocalStorage();
     }
@@ -86,7 +83,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   const cacheManager = new CacheManager();
 
-  // API 엔드포인트 설정 수정
   const API_ENDPOINTS = {
     upbit: {
       url: "https://api.upbit.com/v1/ticker?markets=KRW-BTC",
@@ -106,14 +102,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     },
   };
 
-  // 업데이트 간격 수정
   const UPDATE_INTERVALS = {
-    price: 5000, // 가격 5초마다
-    volume: 60000, // 거래량 1분마다
-    other: 300000, // 기타 정보 5분마다
+    price: 5000,
+    volume: 60000,
+    other: 300000,
   };
 
-  // 이전 가격을 저장할 변수 추가
   let previousPrices = {
     upbit: 0,
     binance: 0,
@@ -121,7 +115,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   function updatePriceWithAnimation(element, newPrice, previousPrice) {
     if (previousPrice > 0) {
-      // 가격 변동에 따른 클래스 추가
       element.classList.remove("price-up", "price-down");
       if (newPrice > previousPrice) {
         element.classList.add("price-up");
@@ -129,7 +122,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         element.classList.add("price-down");
       }
 
-      // 애니메이션 종료 후 클래스 제거
       setTimeout(() => {
         element.classList.remove("price-up", "price-down");
       }, 500);
@@ -138,7 +130,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     element.textContent = newPrice.toLocaleString();
   }
 
-  // API 요청 함수 수정
   async function fetchWithRetry(endpoint, options = {}) {
     const {
       retries = 3,
@@ -176,7 +167,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
 
         const rawData = await response.json();
-        // 데이터 구조 처리
         let data;
         if (url.includes("api.upbit.com")) {
           data = Array.isArray(rawData)
@@ -212,7 +202,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     throw lastError;
   }
 
-  // 데이터 가져오기
   async function fetchData() {
     try {
       const [
@@ -231,7 +220,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         fetchWithRetry(API_ENDPOINTS.totalBtc),
       ]);
 
-      // 데이터 처리
       const upbitData = Array.isArray(upbitDataRaw)
         ? upbitDataRaw[0]
         : upbitDataRaw;
@@ -242,11 +230,9 @@ document.addEventListener("DOMContentLoaded", async function () {
       const usdKrwRate = exchangeRateRaw?.rates?.KRW || 1300;
       const fearGreedValue = fearGreedRaw?.data?.[0]?.value || "0";
 
-      // 채굴 데이터 처리
-      const minedBtc = parseInt(totalBtcRaw) / 100000000; // satoshi to BTC
+      const minedBtc = parseInt(totalBtcRaw) / 100000000;
       const remainingBtc = 21000000 - minedBtc;
 
-      // DOM 업데이트
       updatePrices(upbitPrice, binancePrice, usdKrwRate, fearGreedValue);
       updateDetails(upbitData, binanceData);
       updateKimchiPremium(upbitPrice, binancePrice, usdKrwRate);
@@ -318,7 +304,7 @@ document.addEventListener("DOMContentLoaded", async function () {
       return "일시적 오류";
     })();
 
-    const retryDelay = error.message.includes("429") ? 5000 : 3000; // Rate limit일 경우 더 긴 대기
+    const retryDelay = error.message.includes("429") ? 5000 : 3000;
 
     Object.entries(elements).forEach(([key, element]) => {
       if (!element) return;
@@ -340,7 +326,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     }, retryDelay);
   }
 
-  // 데이터 가져오기 함수 분리
   async function fetchPriceData() {
     try {
       const [upbitDataRaw, binanceDataRaw, exchangeRateRaw] = await Promise.all(
@@ -353,7 +338,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         ]
       );
 
-      // 가격 데이터 처리 및 업데이트
       const upbitData = Array.isArray(upbitDataRaw)
         ? upbitDataRaw[0]
         : upbitDataRaw;
@@ -363,7 +347,6 @@ document.addEventListener("DOMContentLoaded", async function () {
       const binancePrice = parseFloat(binanceData.price || "0");
       const usdKrwRate = exchangeRateRaw?.rates?.KRW || 1300;
 
-      // 가격 업데이트 및 애니메이션
       updatePriceWithAnimation(
         elements.upbitPrice,
         upbitPrice,
@@ -375,10 +358,8 @@ document.addEventListener("DOMContentLoaded", async function () {
         previousPrices.binance
       );
 
-      // USD/KRW 환율 업데이트
       elements.exchangeRate.textContent = usdKrwRate.toLocaleString();
 
-      // 사토시 가격 업데이트
       elements.satoshiUsd.textContent = `$${(binancePrice / 100000000).toFixed(
         8
       )}`;
@@ -386,7 +367,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         4
       )}`;
 
-      // 김치프리미엄 업데이트
       const kimchiPremiumValue = (
         (upbitPrice / (binancePrice * usdKrwRate) - 1) *
         100
@@ -397,7 +377,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         parseFloat(kimchiPremiumValue) >= 3
       );
 
-      // 이전 가격 업데이트
       previousPrices.upbit = upbitPrice;
       previousPrices.binance = binancePrice;
     } catch (error) {
@@ -406,16 +385,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
   }
 
-  // 초기화 부분 수정
-  // 초기 데이터 가져오기
   fetchData();
   fetchPriceData();
 
-  // 주기적 업데이트 설정
   let priceTimer = setInterval(fetchPriceData, UPDATE_INTERVALS.price);
   let dataTimer = setInterval(fetchData, UPDATE_INTERVALS.volume);
 
-  // 탭 비활성화 처리 수정
   document.addEventListener("visibilitychange", () => {
     if (document.hidden) {
       clearInterval(priceTimer);

@@ -169,29 +169,29 @@ document.addEventListener('DOMContentLoaded', async function() {
                 exchangeRateRaw,
                 totalBtcRaw
             ] = await Promise.all([
-                fetchWithRetry('https://corsproxy.io/?https://api.upbit.com/v1/ticker?markets=KRW-BTC', {
+                fetchWithRetry('https://api.upbit.com/v1/ticker?markets=KRW-BTC', {
                     retries: 3,
                     delay: 1000,
                     timeout: 5000
                 }),
-                fetchWithRetry('https://corsproxy.io/?https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT', {
+                fetchWithRetry('https://api1.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT', {
                     retries: 3,
                     delay: 1000,
                     timeout: 5000
                 }),
-                fetchWithRetry('https://corsproxy.io/?https://api.alternative.me/fng/?limit=1', {
+                fetchWithRetry('https://api.coinbase.com/v2/prices/BTC-USD/spot', {
                     retries: 2,
                     delay: 2000,
                     cacheKey: 'fearGreed',
                     timeout: 8000
                 }),
-                fetchWithRetry('https://corsproxy.io/?https://open.er-api.com/v6/latest/USD', {
+                fetchWithRetry('https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/usd/krw.json', {
                     retries: 2,
                     delay: 2000,
                     cacheKey: 'exchangeRate',
                     timeout: 8000
                 }),
-                fetchWithRetry('https://corsproxy.io/?https://blockchain.info/q/totalbc', {
+                fetchWithRetry('https://blockchain.info/q/totalbc', {
                     retries: 2,
                     delay: 2000,
                     cacheKey: 'totalBtc',
@@ -228,9 +228,10 @@ document.addEventListener('DOMContentLoaded', async function() {
             // 안전한 값 추출
             const upbitPrice = upbitData?.trade_price || 0;
             const binancePrice = parseFloat(binanceData?.lastPrice || '0');
-            const usdKrwRate = exchangeRate?.rates?.KRW || 0;
+            const usdKrwRate = exchangeRate?.krw || 0;
             const minedBtc = (totalBtc || 0) / 100000000;
             const remainingBtc = 21000000 - minedBtc;
+            const fearGreedValue = parseInt(fearGreed?.data?.amount || '0');
             
             // 김치프리미엄 계산
             const kimchiPremiumValue = ((upbitPrice / (binancePrice * usdKrwRate) - 1) * 100).toFixed(2);

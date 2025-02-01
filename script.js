@@ -190,6 +190,15 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             await new Promise(resolve => setTimeout(resolve, 500)); // 0.5초 대기
             
+            const exchangeRateRaw = await fetchWithRetry('https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/usd/krw.json', {
+                retries: 2,
+                delay: 1000,
+                cacheKey: 'exchangeRate',
+                timeout: 5000
+            });
+            
+            await new Promise(resolve => setTimeout(resolve, 500)); // 0.5초 대기
+            
             const fearGreedRaw = await fetchWithRetry('https://api.coinbase.com/v2/prices/BTC-USD/spot', {
                 retries: 2,
                 delay: 2000,

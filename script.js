@@ -86,14 +86,36 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   const cacheManager = new CacheManager();
 
-  // API 요청 함수
-  async function fetchWithRetry(url, options = {}) {
+  // API 엔드포인트 설정
+  const API_ENDPOINTS = {
+    upbit: {
+      url: "https://api.upbit.com/v1/ticker?markets=KRW-BTC",
+      proxy: "https://cors-anywhere.herokuapp.com/",
+    },
+    binance: {
+      url: "https://api.binance.us/api/v3/ticker/24hr?symbol=BTCUSDT",
+      proxy: "https://api.allorigins.win/raw?url=",
+    },
+    exchangeRate: {
+      url: "https://open.er-api.com/v6/latest/USD",
+      proxy: "", // CORS 지원됨
+    },
+    totalBtc: {
+      url: "https://blockchain.info/q/totalbc",
+      proxy: "https://api.allorigins.win/raw?url=",
+    },
+  };
+
+  // API 요청 함수 수정
+  async function fetchWithRetry(endpoint, options = {}) {
     const {
       retries = 3,
       delay = 1000,
       cacheKey = null,
       timeout = 5000,
     } = options;
+    const { url, proxy } =
+      typeof endpoint === "string" ? { url: endpoint, proxy: "" } : endpoint;
 
     if (cacheKey) {
       const cached = cacheManager.get(cacheKey);
@@ -106,8 +128,11 @@ document.addEventListener("DOMContentLoaded", async function () {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-        const response = await fetch(url, {
+        const response = await fetch(proxy + url, {
           signal: controller.signal,
+          headers: {
+            Origin: window.location.origin,
+          },
         });
 
         clearTimeout(timeoutId);
@@ -128,11 +153,6 @@ document.addEventListener("DOMContentLoaded", async function () {
       }
     }
 
-    if (cacheKey) {
-      const cached = cacheManager.get(cacheKey);
-      if (cached) return cached;
-    }
-
     throw lastError;
   }
 
@@ -146,15 +166,13 @@ document.addEventListener("DOMContentLoaded", async function () {
         fearGreedRaw,
         totalBtcRaw,
       ] = await Promise.all([
-        fetchWithRetry("https://api.upbit.com/v1/ticker?markets=KRW-BTC"),
-        fetchWithRetry(
-          "https://api.binance.us/api/v3/ticker/24hr?symbol=BTCUSDT"
-        ),
-        fetchWithRetry("https://open.er-api.com/v6/latest/USD", {
+        fetchWithRetry(API_ENDPOINTS.upbit),
+        fetchWithRetry(API_ENDPOINTS.binance),
+        fetchWithRetry(API_ENDPOINTS.exchangeRate, {
           cacheKey: "exchangeRate",
         }),
         fetch("https://api.alternative.me/fng/").then((r) => r.json()),
-        fetchWithRetry("https://blockchain.info/q/totalbc"), // 채굴된 비트코인 데이터
+        fetchWithRetry(API_ENDPOINTS.totalBtc),
       ]);
 
       // 데이터 처리

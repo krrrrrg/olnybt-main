@@ -14,6 +14,9 @@ const PROXY_API_KEY = "temp_d89c2c8b46d96b86aa0c11ddd3dd"; // 임시 키, 나중
 // 불필요한 프록시 관련 코드 제거
 const UPDATE_INTERVAL = 15000;
 
+// 바이낸스 API용 프록시
+const BINANCE_PROXY = "https://api.allorigins.win/raw?url=";
+
 // 숫자 포맷팅 함수
 const formatNumber = (number, decimals = 2) => {
   return Number(number).toLocaleString("ko-KR", {
@@ -52,28 +55,36 @@ async function fetchData(url) {
   return null;
 }
 
-// Binance 데이터 가져오기
+// Binance 데이터 가져오기 수정
 async function fetchBinanceData() {
-  const data = await fetchData(ENDPOINTS.BINANCE);
-  if (data?.lastPrice) {
-    document.getElementById("binance-price").textContent = `$${formatNumber(
-      data.lastPrice
-    )}`;
-    document.getElementById("binance-24h-high").textContent = `$${formatNumber(
-      data.highPrice
-    )}`;
-    document.getElementById("binance-24h-low").textContent = `$${formatNumber(
-      data.lowPrice
-    )}`;
-    document.getElementById("binance-24h-volume").textContent = `${formatNumber(
-      data.volume,
-      1
-    )} BTC`;
-    return parseFloat(data.lastPrice);
-  } else {
-    document.getElementById("binance-price").textContent = "일시적 오류";
-    return null;
+  try {
+    const response = await fetch(
+      BINANCE_PROXY + encodeURIComponent(ENDPOINTS.BINANCE)
+    );
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+    const data = await response.json();
+    if (data?.lastPrice) {
+      document.getElementById("binance-price").textContent = `$${formatNumber(
+        data.lastPrice
+      )}`;
+      document.getElementById(
+        "binance-24h-high"
+      ).textContent = `$${formatNumber(data.highPrice)}`;
+      document.getElementById("binance-24h-low").textContent = `$${formatNumber(
+        data.lowPrice
+      )}`;
+      document.getElementById(
+        "binance-24h-volume"
+      ).textContent = `${formatNumber(data.volume, 1)} BTC`;
+      return parseFloat(data.lastPrice);
+    }
+  } catch (error) {
+    console.error("Binance 데이터 조회 실패:", error);
   }
+
+  document.getElementById("binance-price").textContent = "일시적 오류";
+  return null;
 }
 
 // Upbit 웹소켓 설정 수정

@@ -19,10 +19,91 @@ body {
     }
 }
 
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 15px 30px;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo i {
+    font-size: 1.8em;
+    color: #f7931a;
+}
+
+.logo h1 {
+    font-size: 1.5em;
+    font-weight: 600;
+}
+
+header {
+    margin-bottom: 20px;
+}
+
+.section-title {
+    margin-bottom: 15px;
+}
+
+.developer-link {
+    font-size: 0.9em;
+    color: #666;
+}
+
+.developer-link a {
+    color: #f7931a;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.developer-link a:hover {
+    color: #e17f0e;
+}
+
 .container {
-    max-width: 1200px;
+    width: 100%;
+    max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
+}
+
+@media (min-width: 1200px) {
+    .content-grid {
+        grid-template-columns: 3fr 1fr;
+        gap: 25px;
+    }
+
+    .price-cards {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 25px;
+    }
+
+    .price-card {
+        min-height: 250px;
+        padding: 30px;
+    }
+
+    .price-value {
+        font-size: 2.5em;
+    }
+
+    .right-section {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+    }
+
+    .right-section > div:last-child,
+    .right-section > div:nth-last-child(2) {
+        grid-column: span 2;
+    }
 }
 
 @media (max-width: 768px) {
@@ -56,6 +137,7 @@ body {
     font-weight: 700;
     background: linear-gradient(to right, #f7931a, #ffd700);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
 }
 
@@ -67,6 +149,155 @@ body {
     grid-template-columns: 2fr 1fr;
     gap: 20px;
     height: 100%;
+}
+
+.right-section {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+.satoshi-card {
+    background: #1e293b;
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    overflow: hidden;
+}
+
+.satoshi-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.satoshi-card .info-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #f7931a;
+    font-size: 1em;
+    margin-bottom: 10px;
+}
+
+.satoshi-card .info-title i {
+    color: #f7931a;
+}
+
+.satoshi-card .info-value {
+    font-size: 1.4em;
+    font-weight: 600;
+    min-height: 1.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@media (max-width: 768px) {
+    body {
+        font-size: 14px;
+    }
+
+    .container {
+        padding: 10px;
+    }
+
+    .content-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+
+    .price-cards {
+        grid-template-columns: 1fr !important;
+        gap: 15px;
+    }
+
+    .price-card {
+        height: auto;
+        min-height: 130px;
+        padding: 15px;
+    }
+
+    .price-card .price-value {
+        font-size: 1.8em;
+    }
+
+    .price-details {
+        gap: 10px;
+        min-height: 40px;
+    }
+
+    .detail-item {
+        font-size: 0.85em;
+    }
+
+    .price-card {
+        height: auto;
+        min-height: 150px;
+        padding: 5px;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .price-card .price-content {
+        min-height: 40px;
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        box-sizing: border-box;
+        margin: 5px 0;
+    }
+
+    .price-card .price-value {
+        font-size: 1.8em;
+    }
+
+    .upbit-price, .binance-price {
+        font-size: 0.8em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+        padding: 0;
+        line-height: 1;
+    }
+
+
+
+    .price-card .price-content .price-value {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+        text-align: center;
+    }
+
+    .price-details {
+        min-height: 60px;
+        gap: 10px;
+    }
+
+    .detail-item {
+        font-size: 0.85em;
+    }
+
+    .right-section {
+        gap: 15px;
+    }
+
+    .satoshi-card {
+        height: 90px;
+        padding: 15px;
+    }
+
+    .satoshi-card .info-value {
+        font-size: 1.2em;
+    }
 }
 
 .section-title {
@@ -88,6 +319,172 @@ body {
     border-radius: 12px;
     padding: 20px;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    display: flex;
+    flex-direction: column;
+    min-height: 500px;
+}
+
+.price-section .section-title {
+    margin-bottom: 30px;
+}
+
+.price-cards {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+    align-items: center;
+    height: 100%;
+}
+
+.price-card {
+    background: #2d3748;
+    border-radius: 12px;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 350px;
+    justify-content: space-between;
+}
+
+.price-card > * {
+    width: 100%;
+}
+
+.price-card .exchange-name {
+    font-size: 1.5em;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.price-card .price-content {
+    text-align: center;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: 15px 0;
+    min-height: 150px;
+}
+
+.price-card .price-content .price-value {
+    font-size: 2.8em;
+    margin: 10px 0;
+    min-height: 1.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.price-card .price-value {
+    font-size: 2.8em;
+    margin: 10px 0;
+    transition: color 0.3s ease;
+}
+
+@keyframes priceChange {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.price-up {
+    color: #ef4444 !important;
+    animation: priceChange 0.3s ease;
+}
+
+.price-down {
+    color: #3b82f6 !important;
+    animation: priceChange 0.3s ease;
+}
+
+.premium-high {
+    color: #ef4444 !important;
+    font-weight: 700;
+}
+
+.price-card .currency {
+    font-size: 1.2em;
+    margin: 10px 0;
+}
+
+.exchange-name {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #f7931a;
+    margin-bottom: 15px;
+}
+
+.price-value {
+    font-size: 2em;
+    font-weight: 700;
+    margin: 10px 0;
+}
+
+.currency {
+    color: #a0aec0;
+    margin-bottom: 15px;
+}
+
+.price-details {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    width: 100%;
+    margin-top: auto;
+    min-height: 80px;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+    padding: 0 5px;
+}
+
+.detail-item span {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center;
+    font-size: 0.95em;
+}
+
+.detail-item span {
+    width: 100%;
+    text-align: center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.detail-item i {
+    color: #f7931a;
+    margin-bottom: 5px;
+}
+
+@media (max-width: 768px) {
+    .price-cards {
+        grid-template-columns: 1fr;
+    }
+    
+    .price-card {
+        min-height: 180px;
+    }
 }
 
 .price-section:hover {
@@ -485,7 +882,6 @@ body.light-mode {
 }
 
 
-}
 
 body.light-mode .price-item,
 body.light-mode .info-item {

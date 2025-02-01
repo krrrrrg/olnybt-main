@@ -8,7 +8,7 @@ const ENDPOINTS = {
 };
 
 // CORS 프록시 설정
-const CORS_PROXY = "https://proxy.cors.sh/";
+const CORS_PROXY = "https://corsproxy.io/?";
 const PROXY_API_KEY = "temp_d89c2c8b46d96b86aa0c11ddd3dd"; // 임시 키, 나중에 변경 필요
 
 // 불필요한 프록시 관련 코드 제거
@@ -58,9 +58,7 @@ async function fetchData(url) {
 // Binance 데이터 가져오기 수정
 async function fetchBinanceData() {
   try {
-    const response = await fetch(
-      BINANCE_PROXY + encodeURIComponent(ENDPOINTS.BINANCE)
-    );
+    const response = await fetch(CORS_PROXY + ENDPOINTS.BINANCE);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
     const data = await response.json();
@@ -232,11 +230,7 @@ function updateSatoshiValue(binancePrice, upbitPrice) {
 // 채굴 데이터 가져오기 함수 수정
 async function fetchMiningData() {
   try {
-    const response = await fetch(CORS_PROXY + ENDPOINTS.BLOCKCHAIN, {
-      headers: {
-        "x-cors-api-key": PROXY_API_KEY,
-      },
-    });
+    const response = await fetch(CORS_PROXY + ENDPOINTS.BLOCKCHAIN);
     if (!response.ok) throw new Error("Blockchain API 응답 오류");
 
     const totalMinedSatoshi = await response.text();

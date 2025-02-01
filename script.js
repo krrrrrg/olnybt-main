@@ -169,12 +169,12 @@ document.addEventListener('DOMContentLoaded', async function() {
                 exchangeRate,
                 totalBtc
             ] = await Promise.all([
-                fetchWithRetry('https://api.upbit.com/v1/ticker?markets=KRW-BTC', {
+                fetchWithRetry('https://crix-api-endpoint.upbit.com/v1/crix/candles/minutes/1?code=CRIX.UPBIT.KRW-BTC&count=1', {
                     retries: 3,
                     delay: 1000,
                     timeout: 5000
                 }),
-                fetchWithRetry('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT', {
+                fetchWithRetry('https://api3.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT', {
                     retries: 3,
                     delay: 1000,
                     timeout: 5000

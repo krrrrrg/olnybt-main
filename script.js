@@ -89,8 +89,8 @@ document.addEventListener("DOMContentLoaded", async function () {
       proxy: "https://api.allorigins.win/raw?url=",
     },
     binance: {
-      url: "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT",
-      proxy: "https://corsproxy.io/?",
+      url: "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT",
+      proxy: "https://proxy.cors.sh/",
     },
     exchangeRate: {
       url: "https://open.er-api.com/v6/latest/USD",
@@ -159,6 +159,7 @@ document.addEventListener("DOMContentLoaded", async function () {
           headers: {
             Accept: "application/json",
             "Cache-Control": "no-cache",
+            "x-cors-api-key": "temp_f34f25a0594c36dca4c4d55b74a37e6f",
             Origin: window.location.origin,
           },
         });
@@ -187,8 +188,12 @@ document.addEventListener("DOMContentLoaded", async function () {
           data = parseInt(rawData);
         } else if (url.includes("binance.com")) {
           data = {
-            price: rawData.price,
+            price: rawData.lastPrice || rawData.price || "0",
+            volume: rawData.volume || "0",
+            high: rawData.highPrice || "0",
+            low: rawData.lowPrice || "0",
           };
+          console.log("Binance processed data:", data);
         } else {
           data = rawData;
         }
@@ -269,10 +274,14 @@ document.addEventListener("DOMContentLoaded", async function () {
     }
 
     if (binanceData) {
-      const price = parseFloat(binanceData?.price || "0");
-      elements.binanceHigh.textContent = formatNumber(price);
-      elements.binanceLow.textContent = formatNumber(price);
-      elements.binanceVolume.textContent = `${formatNumber(0)} BTC`;
+      const price = parseFloat(binanceData.price || "0");
+      const high = parseFloat(binanceData.high || "0");
+      const low = parseFloat(binanceData.low || "0");
+      const volume = parseFloat(binanceData.volume || "0");
+
+      elements.binanceHigh.textContent = formatNumber(high);
+      elements.binanceLow.textContent = formatNumber(low);
+      elements.binanceVolume.textContent = `${formatNumber(volume)} BTC`;
     }
   }
 

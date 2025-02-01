@@ -3,7 +3,7 @@ const ENDPOINTS = {
   BINANCE: "https://api1.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT",
   EXCHANGE_RATE: "https://api.exchangerate-api.com/v4/latest/USD",
   FEAR_GREED: "https://api.alternative.me/fng/",
-  BLOCKCHAIN: "https://blockchain.info/q/totalbc",
+  BLOCKCHAIN: "https://mempool.space/api/blocks/tip/height",
   UPBIT_WS: "wss://api.upbit.com/websocket/v1",
 };
 
@@ -230,11 +230,11 @@ function updateSatoshiValue(binancePrice, upbitPrice) {
 // 채굴 데이터 가져오기 함수 수정
 async function fetchMiningData() {
   try {
-    const response = await fetch(CORS_PROXY + ENDPOINTS.BLOCKCHAIN);
+    const response = await fetch(ENDPOINTS.BLOCKCHAIN);
     if (!response.ok) throw new Error("Blockchain API 응답 오류");
 
-    const totalMinedSatoshi = await response.text();
-    const totalMinedBTC = parseInt(totalMinedSatoshi) / 100000000;
+    const blockHeight = await response.text();
+    const totalMinedBTC = parseInt(blockHeight) * 6.25 + 7500000; // 초기 채굴량 포함
     const remainingBTC = 21000000 - totalMinedBTC;
 
     document.getElementById("btc-mined").textContent = `${formatNumber(

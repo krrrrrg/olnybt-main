@@ -1,179 +1,194 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>비트코인 좋게보이너</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
+    <link rel="stylesheet" href="style.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
     <div class="container">
-        <header>
-            <div class="header-content">
-                <div class="logo">
-                    <i class="fab fa-bitcoin"></i>
-                    <h1>비트코인 좋게보이너</h1>
-                </div>
-                <div class="developer-link">
-                    개발자 𝕏: <a href="https://x.com/Krrkyakya" target="_blank">@Krrkyakya</a>
-                </div>
-            </div>
-        </header>
-        <br>
+      <header>
+        <div class="header-content">
+          <div class="logo">
+            <i class="fab fa-bitcoin"></i>
+            <h1>비트코인 좋게보이너</h1>
+          </div>
+          <div class="developer-link">
+            개발자 𝕏:
+            <a href="https://x.com/Krrkyakya" target="_blank">@Krrkyakya</a>
+          </div>
+        </div>
+      </header>
+      <br />
 
-        <main>
-            <div class="content-grid">
-                <div class="price-section">
-                    <h2 class="section-title">
-                        <i class="fas fa-chart-line"></i>
-                        현재 가격
-                    </h2>
-                    <div class="price-cards">
-                        <div class="price-card">
-                            <div class="exchange-name">BINANCE</div>
-                            <div class="price-content">
-                                <div id="binance-price" class="price-value">로딩 중...</div>
-                                <div class="currency">USD</div>
-                            </div>
-                            <div class="price-details">
-                                <div class="detail-item">
-                                    <i class="fas fa-arrow-trend-up"></i>
-                                    <span id="binance-24h-high">로딩 중...</span>
-                                </div>
-                                <div class="detail-item">
-                                    <i class="fas fa-arrow-trend-down"></i>
-                                    <span id="binance-24h-low">로딩 중...</span>
-                                </div>
-                                <div class="detail-item">
-                                    <i class="fas fa-chart-line"></i>
-                                    <span id="binance-24h-volume">로딩 중...</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="price-card">
-                            <div class="exchange-name">UPBIT</div>
-                            <div class="price-content">
-                                <div id="upbit-price" class="price-value">로딩 중...</div>
-                                <div class="currency">KRW</div>
-                            </div>
-                            <div class="price-details">
-                                <div class="detail-item">
-                                    <i class="fas fa-arrow-trend-up"></i>
-                                    <span id="upbit-24h-high">로딩 중...</span>
-                                </div>
-                                <div class="detail-item">
-                                    <i class="fas fa-arrow-trend-down"></i>
-                                    <span id="upbit-24h-low">로딩 중...</span>
-                                </div>
-                                <div class="detail-item">
-                                    <i class="fas fa-chart-line"></i>
-                                    <span id="upbit-24h-volume">로딩 중...</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+      <main>
+        <div class="content-grid">
+          <div class="price-section">
+            <h2 class="section-title">
+              <i class="fas fa-chart-line"></i>
+              현재 가격
+            </h2>
+            <div class="price-cards">
+              <div class="price-card">
+                <div class="exchange-name">BINANCE</div>
+                <div class="price-content">
+                  <div id="binance-price" class="price-value">로딩 중...</div>
+                  <div class="currency">USD</div>
                 </div>
-
-                <div class="right-section">
-                    <div class="satoshi-card">
-                        <div class="info-title">
-                            <i class="fas fa-dollar-sign"></i>
-                            USD
-                        </div>
-                        <div id="satoshi-usd" class="info-value">로딩 중...</div>
-                    </div>
-                    <div class="satoshi-card">
-                        <div class="info-title">
-                            <i class="fas fa-won-sign"></i>
-                            KRW
-                        </div>
-                        <div id="satoshi-krw" class="info-value">로딩 중...</div>
-                    </div>
-                    <div class="satoshi-card">
-                        <div class="info-title">
-                            <i class="fas fa-exchange-alt"></i>
-                            환율 (USD/KRW)
-                        </div>
-                        <div id="exchange-rate" class="info-value">로딩 중...</div>
-                    </div>
-                    <div class="satoshi-card">
-                        <div class="info-title">
-                            <i class="fas fa-percentage"></i>
-                            김치프리미엄
-                        </div>
-                        <div id="kimchi-premium" class="info-value">로딩 중...</div>
-                    </div>
-                    <div class="satoshi-card">
-                        <div class="info-title">
-                            <i class="fas fa-chart-pie"></i>
-                            공포/탐욕 지수
-                        </div>
-                        <div id="fear-greed" class="info-value">로딩 중...</div>
-                    </div>
+                <div class="price-details">
+                  <div class="detail-item">
+                    <i class="fas fa-arrow-trend-up"></i>
+                    <span id="binance-24h-high">로딩 중...</span>
+                  </div>
+                  <div class="detail-item">
+                    <i class="fas fa-arrow-trend-down"></i>
+                    <span id="binance-24h-low">로딩 중...</span>
+                  </div>
+                  <div class="detail-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span id="binance-24h-volume">로딩 중...</span>
+                  </div>
                 </div>
-            </div>
-            <br>
-
-            <div class="mining-section">
-                <div class="mining-info">
-                    <h2 class="section-title">
-                        <i class="fas fa-coins"></i>
-                        채굴 현황
-                    </h2>
-                    <br>
-                    <div class="mining-cards">
-                        <div class="mining-card">
-                            <div class="info-title">채굴된 비트코인</div>
-                            <div id="btc-mined" class="info-value">로딩 중...</div>
-                        </div>
-                        <div class="mining-card">
-                            <div class="info-title">남은 채굴량</div>
-                            <div id="btc-remaining" class="info-value">로딩 중...</div>
-                        </div>
-                    </div>
+              </div>
+              <div class="price-card">
+                <div class="exchange-name">UPBIT</div>
+                <div class="price-content">
+                  <div id="upbit-price" class="price-value">로딩 중...</div>
+                  <div class="currency">KRW</div>
                 </div>
+                <div class="price-details">
+                  <div class="detail-item">
+                    <i class="fas fa-arrow-trend-up"></i>
+                    <span id="upbit-24h-high">로딩 중...</span>
+                  </div>
+                  <div class="detail-item">
+                    <i class="fas fa-arrow-trend-down"></i>
+                    <span id="upbit-24h-low">로딩 중...</span>
+                  </div>
+                  <div class="detail-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span id="upbit-24h-volume">로딩 중...</span>
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
 
-            <div class="chart-container">
-                <section class="chart">
-                    <h2>가격 차트</h2>
-                    <!-- TradingView Widget BEGIN -->
-                    <div class="tradingview-widget-container">
-                        <div id="tradingview_btc"></div>
-                        <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
-                        <script type="text/javascript">
-                        new TradingView.widget({
-                            "autosize": true,
-                            "symbol": "BINANCE:BTCUSDT",
-                            "interval": "15",
-                            "timezone": "Asia/Seoul",
-                            "theme": "dark",
-                            "style": "1",
-                            "locale": "kr",
-                            "toolbar_bg": "#f1f3f6",
-                            "enable_publishing": false,
-                            "hide_side_toolbar": false,
-                            "allow_symbol_change": true,
-                            "details": true,
-                            "hotlist": true,
-                            "calendar": true,
-                            "container_id": "tradingview_btc",
-                            "hide_volume": false,
-                            "studies": [
-                                "MASimple@tv-basicstudies",
-                                "RSI@tv-basicstudies"
-                            ]
-                        });
-                        </script>
-                    </div>
-                    <!-- TradingView Widget END -->
-                </section>
+          <div class="right-section">
+            <div class="satoshi-card">
+              <div class="info-title">
+                <i class="fas fa-dollar-sign"></i>
+                USD
+              </div>
+              <div id="satoshi-usd" class="info-value">로딩 중...</div>
             </div>
-        </main>
+            <div class="satoshi-card">
+              <div class="info-title">
+                <i class="fas fa-won-sign"></i>
+                KRW
+              </div>
+              <div id="satoshi-krw" class="info-value">로딩 중...</div>
+            </div>
+            <div class="satoshi-card">
+              <div class="info-title">
+                <i class="fas fa-exchange-alt"></i>
+                환율 (USD/KRW)
+              </div>
+              <div id="exchange-rate" class="info-value">로딩 중...</div>
+            </div>
+            <div class="satoshi-card">
+              <div class="info-title">
+                <i class="fas fa-percentage"></i>
+                김치프리미엄
+              </div>
+              <div id="kimchi-premium" class="info-value">로딩 중...</div>
+            </div>
+            <div class="satoshi-card">
+              <div class="info-title">
+                <i class="fas fa-chart-pie"></i>
+                공포/탐욕 지수
+              </div>
+              <div id="fear-greed" class="info-value">로딩 중...</div>
+            </div>
+          </div>
+        </div>
+        <br />
+
+        <div class="mining-section">
+          <div class="mining-info">
+            <h2 class="section-title">
+              <i class="fas fa-coins"></i>
+              채굴 현황
+            </h2>
+            <br />
+            <div class="mining-cards">
+              <div class="mining-card">
+                <div class="info-title">채굴된 비트코인</div>
+                <div id="btc-mined" class="info-value">로딩 중...</div>
+              </div>
+              <div class="mining-card">
+                <div class="info-title">남은 채굴량</div>
+                <div id="btc-remaining" class="info-value">로딩 중...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <section class="chart">
+            <h2>가격 차트</h2>
+            <!-- TradingView Widget BEGIN -->
+            <div class="tradingview-widget-container">
+              <div id="tradingview_btc"></div>
+              <script
+                type="text/javascript"
+                src="https://s3.tradingview.com/tv.js"
+              ></script>
+              <script type="text/javascript">
+                new TradingView.widget({
+                  autosize: true,
+                  symbol: "BINANCE:BTCUSDT",
+                  interval: "15",
+                  timezone: "Asia/Seoul",
+                  theme: "dark",
+                  style: "1",
+                  locale: "kr",
+                  toolbar_bg: "#f1f3f6",
+                  enable_publishing: false,
+                  hide_side_toolbar: false,
+                  allow_symbol_change: true,
+                  details: true,
+                  hotlist: true,
+                  calendar: true,
+                  container_id: "tradingview_btc",
+                  hide_volume: false,
+                  studies: ["MASimple@tv-basicstudies", "RSI@tv-basicstudies"],
+                });
+              </script>
+            </div>
+            <!-- TradingView Widget END -->
+          </section>
+        </div>
+
+        <img
+          src="image.jpg"
+          loading="lazy"
+          alt="설명"
+          srcset="image-300w.jpg 300w, image-600w.jpg 600w"
+          sizes="(max-width: 600px) 300px, 600px"
+        />
+      </main>
     </div>
 
     <script src="script.js"></script>
-</body>
+  </body>
 </html>

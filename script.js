@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     constructor() {
       this.cache = {};
       this.duration = {
-        exchangeRate: 60 * 60 * 1000, // 1시간
+        exchangeRate: 30 * 60 * 1000, // 30분
         fearGreed: 60 * 60 * 1000, // 1시간
       };
       this.loadFromLocalStorage();
@@ -89,20 +89,20 @@ document.addEventListener("DOMContentLoaded", async function () {
   // API 엔드포인트 설정 수정
   const API_ENDPOINTS = {
     upbit: {
-      url: "https://api.upbit.com/v1/trades/ticks?market=KRW-BTC&count=1",
-      proxy: "https://api.codetabs.com/v1/proxy?quest=",
+      url: "https://api.upbit.com/v1/ticker?markets=KRW-BTC",
+      proxy: "https://api.allorigins.win/raw?url=",
     },
     binance: {
-      url: "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT",
-      proxy: "https://api.codetabs.com/v1/proxy?quest=",
+      url: "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT",
+      proxy: "https://api.allorigins.win/raw?url=",
     },
     exchangeRate: {
       url: "https://open.er-api.com/v6/latest/USD",
       proxy: "",
     },
     totalBtc: {
-      url: "https://api.blockchain.info/stats",
-      proxy: "https://api.codetabs.com/v1/proxy?quest=",
+      url: "https://blockchain.info/q/totalbc",
+      proxy: "https://api.allorigins.win/raw?url=",
     },
   };
 
@@ -133,6 +133,7 @@ document.addEventListener("DOMContentLoaded", async function () {
           signal: controller.signal,
           headers: {
             Accept: "application/json",
+            Origin: window.location.origin,
           },
         });
 
@@ -146,23 +147,21 @@ document.addEventListener("DOMContentLoaded", async function () {
         // 데이터 구조 처리
         let data;
         if (url.includes("api.upbit.com")) {
-          data = rawData[0]
+          data = Array.isArray(rawData)
             ? {
                 trade_price: rawData[0].trade_price,
-                high_price: rawData[0].trade_price,
-                low_price: rawData[0].trade_price,
-                acc_trade_volume_24h: 0,
+                high_price: rawData[0].high_price,
+                low_price: rawData[0].low_price,
+                acc_trade_volume_24h:
+                  rawData[0].acc_trade_volume_24h ||
+                  rawData[0].acc_trade_volume ||
+                  0,
               }
-            : null;
+            : rawData;
         } else if (url.includes("blockchain.info")) {
-          data = rawData.total_btc;
+          data = parseInt(rawData);
         } else if (url.includes("binance.com")) {
-          data = {
-            lastPrice: rawData.price,
-            highPrice: rawData.price,
-            lowPrice: rawData.price,
-            volume: "0",
-          };
+          data = rawData;
         } else {
           data = rawData;
         }
@@ -208,10 +207,13 @@ document.addEventListener("DOMContentLoaded", async function () {
         binanceDataRaw.code === 0
           ? { lastPrice: "0", highPrice: "0", lowPrice: "0", volume: "0" }
           : {
-              lastPrice: binanceDataRaw.price || "0",
-              highPrice: binanceDataRaw.price || "0",
-              lowPrice: binanceDataRaw.price || "0",
-              volume: "0",
+              lastPrice:
+                binanceDataRaw.lastPrice || binanceDataRaw.price || "0",
+              highPrice:
+                binanceDataRaw.highPrice || binanceDataRaw.price || "0",
+              lowPrice: binanceDataRaw.lowPrice || binanceDataRaw.price || "0",
+              volume:
+                binanceDataRaw.volume || binanceDataRaw.quoteVolume || "0",
             };
 
       const upbitPrice = upbitData?.trade_price || 0;
@@ -289,8 +291,14 @@ document.addEventListener("DOMContentLoaded", async function () {
       if (error.name === "AbortError") return "연결 시간 초과";
       if (error.message.includes("Failed to fetch")) return "네트워크 오류";
       if (error.message.includes("JSON")) return "데이터 형식 오류";
+      if (error.message.includes("403")) return "API 접근 제한";
+      if (error.message.includes("429")) return "요청 한도 초과";
+      if (error.message.includes("404")) return "데이터 없음";
+      if (error.message.includes("500")) return "서버 오류";
       return "일시적 오류";
     })();
+
+    const retryDelay = error.message.includes("429") ? 5000 : 3000; // Rate limit일 경우 더 긴 대기
 
     Object.entries(elements).forEach(([key, element]) => {
       if (!element) return;
@@ -309,12 +317,23 @@ document.addEventListener("DOMContentLoaded", async function () {
         element?.classList.remove("error");
       });
       fetchData();
-    }, 3000);
+    }, retryDelay);
   }
 
   // 초기 데이터 가져오기
   fetchData();
 
   // 1분마다 데이터 갱신
-  setInterval(fetchData, 60000);
+  const updateInterval = 60000; // 1분
+  let updateTimer = setInterval(fetchData, updateInterval);
+
+  // 탭이 비활성화될 때 업데이트 중지
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      clearInterval(updateTimer);
+    } else {
+      fetchData();
+      updateTimer = setInterval(fetchData, updateInterval);
+    }
+  });
 });

@@ -134,9 +134,10 @@ document.addEventListener('DOMContentLoaded', async function() {
                     throw new Error(`API ${url} failed: ${response.status}`);
                 }
 
-                const data = cacheKey ? await response.json() : await response.text();
-                if (cacheKey) cacheManager.set(cacheKey, data);
-                return data;
+                const data = await response.json();
+                const result = data.contents ? JSON.parse(data.contents) : data;
+                if (cacheKey) cacheManager.set(cacheKey, result);
+                return result;
             } catch (error) {
                 lastError = error;
                 console.warn(`Retry ${i + 1}/${retries} failed for ${url}:`, error);

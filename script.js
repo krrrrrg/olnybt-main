@@ -47,16 +47,36 @@ document.addEventListener('DOMContentLoaded', async function() {
         }, 300);
     }
 
+    // 캐시 설정
+    const CACHE_DURATION = {
+        EXCHANGE_RATE: 60 * 60 * 1000, // 1시간
+        FEAR_GREED: 60 * 60 * 1000,    // 1시간
+        TOTAL_BTC: 30 * 60 * 1000      // 30분
+    };
+
+    // 캐시된 데이터
+    let cache = {
+        exchangeRate: { data: null, timestamp: 0 },
+        fearGreed: { data: null, timestamp: 0 },
+        totalBtc: { data: null, timestamp: 0 }
+    };
+
+    // 캐시 확인 함수
+    function isValidCache(type) {
+        const cacheData = cache[type];
+        return cacheData.data && (Date.now() - cacheData.timestamp) < CACHE_DURATION[type];
+    }
+
     // 데이터 가져오기
     async function fetchData() {
         try {
-            // API 요청
+            // 서버 API 요청
             const responses = await Promise.all([
-                fetch('https://api.upbit.com/v1/ticker?markets=KRW-BTC'),
-                fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'),
-                fetch('https://api.alternative.me/fng/?limit=1'),
-                fetch('https://open.er-api.com/v6/latest/USD'),
-                fetch('https://blockchain.info/q/totalbc')
+                fetch('/api/upbit'),
+                fetch('/api/binance'),
+                fetch('/api/fear-greed'),
+                fetch('/api/exchange-rate'),
+                fetch('/api/total-btc')
             ]);
 
             // 응답 확인
@@ -66,7 +86,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 }
             });
 
-            // 데이터 추출
+            // 데이터 추출 및 캐시 업데이트
             const [upbitData, binanceData, fearGreed, exchangeRate, totalBtc] = await Promise.all([
                 responses[0].json(),
                 responses[1].json(),
@@ -74,6 +94,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 responses[3].json(),
                 responses[4].text()
             ]);
+
 
             // 값 추출 및 계산
             const upbitPrice = upbitData[0].trade_price;

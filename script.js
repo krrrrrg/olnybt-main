@@ -1,8 +1,12 @@
 // API 엔드포인트
 const BINANCE_API = "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT";
 const UPBIT_API = "https://api.upbit.com/v1/ticker?markets=KRW-BTC";
-const EXCHANGE_RATE_API = "https://api.exchangerate-api.com/v4/latest/USD";
+const EXCHANGE_RATE_API =
+  "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/usd/krw.json";
 const FEAR_GREED_API = "https://api.alternative.me/fng/";
+
+// 채굴 관련 API 추가
+const BLOCKCHAIN_INFO_API = "https://blockchain.info/q/";
 
 // 프록시 서버 설정
 const PROXY_URLS = [
@@ -106,15 +110,16 @@ async function fetchUpbitData() {
 // 환율 데이터 가져오기
 async function fetchExchangeRate() {
   try {
-    const data = await fetchWithRetry(EXCHANGE_RATE_API);
-    if (data && data.rates && data.rates.KRW) {
-      const rate = data.rates.KRW;
-      document.getElementById("exchange-rate").textContent = `${formatNumber(
-        rate
-      )}`;
-      return rate;
-    }
-    return null;
+    const response = await fetch(EXCHANGE_RATE_API);
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
+    const data = await response.json();
+    const rate = data.krw;
+
+    document.getElementById("exchange-rate").textContent = `${formatNumber(
+      rate
+    )}`;
+    return rate;
   } catch (error) {
     console.error("환율 데이터 조회 실패:", error);
     document.getElementById("exchange-rate").textContent = "일시적 오류";
@@ -163,41 +168,79 @@ function calculateKimchiPremium(upbitPrice, binancePrice, exchangeRate) {
   )}%`;
 }
 
-// 사토시 가치 계산
-function updateSatoshiValue(binancePrice, exchangeRate) {
-  if (!binancePrice || !exchangeRate) return;
+// 사토시 가치 계산 함수 수정
+function updateSatoshiValue(binancePrice, upbitPrice) {
+  // binancePrice가 있으면 USD 계산
+  if (binancePrice) {
+    const satoshiUSD = binancePrice / 100000000;
+    document.getElementById("satoshi-usd").textContent = `$${formatNumber(
+      satoshiUSD,
+      6
+    )}`;
+  }
 
-  const satoshiUSD = binancePrice / 100000000;
-  const satoshiKRW = satoshiUSD * exchangeRate;
+  // upbitPrice가 있으면 KRW 계산
+  if (upbitPrice) {
+    const satoshiKRW = upbitPrice / 100000000;
+    document.getElementById("satoshi-krw").textContent = `₩${formatNumber(
+      satoshiKRW,
+      2
+    )}`;
+  }
+}
 
-  document.getElementById("satoshi-usd").textContent = `$${formatNumber(
-    satoshiUSD,
-    6
-  )}`;
-  document.getElementById("satoshi-krw").textContent = `₩${formatNumber(
-    satoshiKRW,
-    2
-  )}`;
+// 채굴 데이터 가져오기
+async function fetchMiningData() {
+  try {
+    const [totalBTC, remainingBTC] = await Promise.all([
+      fetch(BLOCKCHAIN_INFO_API + "totalbc").then((res) => res.text()),
+      fetch(BLOCKCHAIN_INFO_API + "totalmined").then((res) => res.text()),
+    ]);
+
+    const total = parseInt(totalBTC) / 100000000;
+    const mined = parseInt(remainingBTC) / 100000000;
+    const remaining = 21000000 - mined;
+
+    document.getElementById("btc-mined").textContent = `${formatNumber(
+      mined,
+      0
+    )} BTC`;
+    document.getElementById("btc-remaining").textContent = `${formatNumber(
+      remaining,
+      0
+    )} BTC`;
+  } catch (error) {
+    console.error("채굴 데이터 조회 실패:", error);
+    document.getElementById("btc-mined").textContent = "일시적 오류";
+    document.getElementById("btc-remaining").textContent = "일시적 오류";
+  }
 }
 
 // 데이터 업데이트 함수 수정
 async function updateAllData() {
   try {
-    const [binancePrice, upbitPrice, exchangeRate] = await Promise.all([
+    // 기존 데이터 업데이트
+    const [binancePrice, upbitPrice] = await Promise.all([
       fetchBinanceData().catch(() => null),
       fetchUpbitData().catch(() => null),
-      fetchExchangeRate().catch(() => null),
     ]);
 
+    // 사토시 가치 업데이트
+    updateSatoshiValue(binancePrice, upbitPrice);
+
+    // 환율과 김치프리미엄
+    const exchangeRate = await fetchExchangeRate().catch(() => null);
     if (binancePrice && upbitPrice && exchangeRate) {
       calculateKimchiPremium(upbitPrice, binancePrice, exchangeRate);
-      updateSatoshiValue(binancePrice, exchangeRate);
     }
 
-    // 공포/탐욕 지수는 덜 자주 업데이트
-    if (Math.random() < 0.2) {
-      // 20% 확률로 업데이트
-      fetchFearGreedIndex().catch(console.error);
+    // 채굴 데이터는 1분에 한 번만 업데이트
+    if (
+      !window.lastMiningUpdate ||
+      Date.now() - window.lastMiningUpdate > 60000
+    ) {
+      await fetchMiningData();
+      window.lastMiningUpdate = Date.now();
     }
   } catch (error) {
     console.error("데이터 업데이트 실패:", error);

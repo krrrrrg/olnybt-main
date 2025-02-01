@@ -82,7 +82,6 @@ document.addEventListener("DOMContentLoaded", async function () {
       this.duration = {
         exchangeRate: 60 * 60 * 1000, // 1시간
         fearGreed: 60 * 60 * 1000, // 1시간
-        totalBtc: 30 * 60 * 1000, // 30분
       };
       this.loadFromLocalStorage();
     }
@@ -218,9 +217,9 @@ document.addEventListener("DOMContentLoaded", async function () {
 
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // 바이낸스 API - 프록시 추가
+      // 바이낸스 API - 다른 엔드포인트 시도
       const binanceDataRaw = await fetchWithRetry(
-        "https://api3.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT",
+        "https://api.binance.us/api/v3/ticker/24hr?symbol=BTCUSDT",
         {
           retries: 3,
           delay: 1000,
@@ -326,6 +325,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         if (error.name === "AbortError") return "연결 시간 초과";
         if (error.message.includes("Failed to fetch")) return "네트워크 오류";
         if (error.message.includes("JSON")) return "데이터 형식 오류";
+        if (error.message.includes("totalBtcRaw")) return "데이터 로드 중...";
         return "일시적 오류";
       })();
 

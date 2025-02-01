@@ -89,20 +89,20 @@ document.addEventListener("DOMContentLoaded", async function () {
   // API 엔드포인트 설정 수정
   const API_ENDPOINTS = {
     upbit: {
-      url: "https://api.upbit.com/v1/ticker?markets=KRW-BTC",
-      proxy: "https://proxy.cors.sh/", // 새로운 프록시
+      url: "https://crix-api-endpoint.upbit.com/v1/crix/candles/minutes/1?code=CRIX.UPBIT.KRW-BTC&count=1",
+      proxy: "https://corsproxy.io/?",
     },
     binance: {
-      url: "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT", // .us 제거
-      proxy: "https://proxy.cors.sh/", // 새로운 프록시
+      url: "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT",
+      proxy: "https://corsproxy.io/?",
     },
     exchangeRate: {
       url: "https://open.er-api.com/v6/latest/USD",
-      proxy: "", // CORS 지원됨
+      proxy: "",
     },
     totalBtc: {
       url: "https://blockchain.info/q/totalbc",
-      proxy: "https://proxy.cors.sh/",
+      proxy: "https://corsproxy.io/?",
     },
   };
 
@@ -128,11 +128,10 @@ document.addEventListener("DOMContentLoaded", async function () {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-        const response = await fetch(proxy + url, {
+        const finalUrl = proxy ? `${proxy}${encodeURIComponent(url)}` : url;
+        const response = await fetch(finalUrl, {
           signal: controller.signal,
           headers: {
-            "x-cors-api-key": "temp_f3e2a2f9c5c99b6bfe2d87df8f5a7b7f", // CORS.SH API 키
-            Origin: window.location.origin,
             Accept: "application/json",
           },
         });
@@ -143,7 +142,25 @@ document.addEventListener("DOMContentLoaded", async function () {
           throw new Error(`API ${url} failed: ${response.status}`);
         }
 
-        const data = await response.json();
+        const rawData = await response.json();
+        // 업비트 데이터 구조 변경에 따른 처리
+        let data;
+        if (url.includes("crix-api-endpoint.upbit.com")) {
+          data = rawData[0]
+            ? {
+                trade_price: rawData[0].tradePrice,
+                high_price: rawData[0].highPrice,
+                low_price: rawData[0].lowPrice,
+                acc_trade_volume_24h: rawData[0].candleAccTradeVolume,
+              }
+            : null;
+        } else {
+          data =
+            proxy && !url.includes("blockchain.info")
+              ? JSON.parse(rawData.contents)
+              : rawData;
+        }
+
         if (cacheKey) cacheManager.set(cacheKey, data);
         return data;
       } catch (error) {

@@ -11,7 +11,9 @@ document.addEventListener('DOMContentLoaded', async function() {
         fearGreedScore: document.getElementById('fear-greed-score'),
         fearGreedImage: document.getElementById('fear-greed-image'),
         toggleMode: document.getElementById('toggle-mode'),
-        tradingviewChart: document.getElementById('tradingview-chart')
+        tradingviewChart: document.getElementById('tradingview-chart'),
+        satoshiUsd: document.getElementById('satoshi-usd'),
+        satoshiKrw: document.getElementById('satoshi-krw')
     };
 
     // 데이터 가져오기
@@ -62,8 +64,15 @@ document.addEventListener('DOMContentLoaded', async function() {
             elements.fearGreedScore.textContent = fearGreedData.data[0].value;
             elements.fearGreedImage.src = `https://alternative.me/crypto/fear-and-greed-index.png?${Date.now()}`;
 
+            // 사토시 가격 계산 및 업데이트
+            const satoshiUsd = binancePrice / 100000000;
+            const satoshiKrw = upbitPrice / 100000000;
+            elements.satoshiUsd.textContent = `$${satoshiUsd.toFixed(8)}`;
+            elements.satoshiKrw.textContent = `₩${satoshiKrw.toFixed(4)}`;
+
             // 타이틀 업데이트
             document.title = `BTC $${binancePrice.toLocaleString()} | ₩${upbitPrice.toLocaleString()}`;
+
 
         } catch (error) {
             console.error('데이터 가져오기 오류:', error);

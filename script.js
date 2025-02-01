@@ -86,15 +86,15 @@ document.addEventListener("DOMContentLoaded", async function () {
 
   const cacheManager = new CacheManager();
 
-  // API 엔드포인트 설정
+  // API 엔드포인트 설정 수정
   const API_ENDPOINTS = {
     upbit: {
       url: "https://api.upbit.com/v1/ticker?markets=KRW-BTC",
-      proxy: "https://cors-anywhere.herokuapp.com/",
+      proxy: "https://proxy.cors.sh/", // 새로운 프록시
     },
     binance: {
-      url: "https://api.binance.us/api/v3/ticker/24hr?symbol=BTCUSDT",
-      proxy: "https://api.allorigins.win/raw?url=",
+      url: "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT", // .us 제거
+      proxy: "https://proxy.cors.sh/", // 새로운 프록시
     },
     exchangeRate: {
       url: "https://open.er-api.com/v6/latest/USD",
@@ -102,7 +102,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     },
     totalBtc: {
       url: "https://blockchain.info/q/totalbc",
-      proxy: "https://api.allorigins.win/raw?url=",
+      proxy: "https://proxy.cors.sh/",
     },
   };
 
@@ -131,7 +131,9 @@ document.addEventListener("DOMContentLoaded", async function () {
         const response = await fetch(proxy + url, {
           signal: controller.signal,
           headers: {
+            "x-cors-api-key": "temp_f3e2a2f9c5c99b6bfe2d87df8f5a7b7f", // CORS.SH API 키
             Origin: window.location.origin,
+            Accept: "application/json",
           },
         });
 

@@ -55,7 +55,16 @@ async function fetchData(url) {
   return null;
 }
 
-// Binance 데이터 가져오기 수정
+// 브라우저 탭 타이틀 업데이트 함수
+function updatePageTitle(binancePrice, upbitPrice) {
+  if (binancePrice && upbitPrice) {
+    document.title = `₿ $${formatNumber(binancePrice)} | ₩${formatNumber(
+      upbitPrice
+    )}`;
+  }
+}
+
+// Binance 데이터 가져오기 함수 수정
 async function fetchBinanceData() {
   try {
     const response = await fetch(CORS_PROXY + ENDPOINTS.BINANCE);
@@ -63,8 +72,9 @@ async function fetchBinanceData() {
 
     const data = await response.json();
     if (data?.lastPrice) {
+      const price = parseFloat(data.lastPrice);
       document.getElementById("binance-price").textContent = `$${formatNumber(
-        data.lastPrice
+        price
       )}`;
       document.getElementById(
         "binance-24h-high"
@@ -75,7 +85,12 @@ async function fetchBinanceData() {
       document.getElementById(
         "binance-24h-volume"
       ).textContent = `${formatNumber(data.volume, 1)} BTC`;
-      return parseFloat(data.lastPrice);
+
+      // 전역 변수에 저장
+      window.binancePrice = price;
+      // 타이틀 업데이트
+      updatePageTitle(window.binancePrice, window.upbitPrice);
+      return price;
     }
   } catch (error) {
     console.error("Binance 데이터 조회 실패:", error);
@@ -105,8 +120,9 @@ function setupUpbitWebSocket() {
       const data = JSON.parse(enc.decode(event.data));
 
       if (data?.trade_price) {
+        const price = data.trade_price;
         document.getElementById("upbit-price").textContent = `₩${formatNumber(
-          data.trade_price
+          price
         )}`;
         document.getElementById(
           "upbit-24h-high"
@@ -118,15 +134,10 @@ function setupUpbitWebSocket() {
           "upbit-24h-volume"
         ).textContent = `${formatNumber(data.acc_trade_volume_24h, 1)} BTC`;
 
-        // 김치프리미엄 계산을 위해 가격 저장
-        window.upbitPrice = data.trade_price;
-        if (window.binancePrice && window.exchangeRate) {
-          calculateKimchiPremium(
-            window.upbitPrice,
-            window.binancePrice,
-            window.exchangeRate
-          );
-        }
+        // 전역 변수에 저장
+        window.upbitPrice = price;
+        // 타이틀 업데이트
+        updatePageTitle(window.binancePrice, window.upbitPrice);
       }
     } catch (error) {
       console.error("Upbit 웹소켓 데이터 처리 실패:", error);

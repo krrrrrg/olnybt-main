@@ -332,44 +332,6 @@ window.addEventListener(
   true
 );
 
-// 스와이프 기능 추가
-function setupPriceSwiper() {
-  const priceSection = document.querySelector(".price-section");
-  let startX, moveX;
-  let currentIndex = 0;
-  const prices = document.querySelectorAll(".price-card");
-
-  priceSection.addEventListener("touchstart", (e) => {
-    startX = e.touches[0].clientX;
-  });
-
-  priceSection.addEventListener("touchmove", (e) => {
-    moveX = e.touches[0].clientX;
-  });
-
-  priceSection.addEventListener("touchend", () => {
-    const diff = startX - moveX;
-    if (Math.abs(diff) > 50) {
-      // 50px 이상 스와이프했을 때만 작동
-      if (diff > 0 && currentIndex < prices.length - 1) {
-        currentIndex++;
-      } else if (diff < 0 && currentIndex > 0) {
-        currentIndex--;
-      }
-      updatePricePosition();
-    }
-  });
-
-  function updatePricePosition() {
-    prices.forEach((price, index) => {
-      price.style.transform = `translateX(${100 * (index - currentIndex)}%)`;
-    });
-  }
-
-  // 초기 위치 설정
-  updatePricePosition();
-}
-
 // DOMContentLoaded 이벤트 리스너 내부
 document.addEventListener("DOMContentLoaded", () => {
   console.log("데이터 로딩 시작...");
@@ -385,6 +347,4 @@ document.addEventListener("DOMContentLoaded", () => {
   window.addEventListener("beforeunload", () => {
     upbitWs.close();
   });
-
-  setupPriceSwiper();
 });

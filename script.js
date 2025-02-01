@@ -120,29 +120,40 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (cached) return cached;
         }
 
+        const corsProxies = [
+            'https://api.allorigins.win/raw?url=',
+            'https://api.codetabs.com/v1/proxy?quest='
+        ];
+
         let lastError;
         for (let i = 0; i < retries; i++) {
-            try {
-                // 타임아웃 추가
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), timeout);
+            for (let proxy of corsProxies) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-                const response = await fetch(url, { signal: controller.signal });
-                clearTimeout(timeoutId);
+                    const response = await fetch(proxy + encodeURIComponent(url), {
+                        signal: controller.signal
+                    });
 
-                if (!response.ok) {
-                    throw new Error(`API ${url} failed: ${response.status}`);
+                    clearTimeout(timeoutId);
+
+                    if (!response.ok) {
+                        throw new Error(`API ${url} failed: ${response.status}`);
+                    }
+
+                    const data = await response.json();
+                    if (cacheKey) cacheManager.set(cacheKey, data);
+                    return data;
+                } catch (error) {
+                    lastError = error;
+                    console.warn(`Retry ${i + 1}/${retries} failed for ${proxy}${url}:`, error);
+                    continue;
                 }
+            }
 
-                const data = await response.json();
-                if (cacheKey) cacheManager.set(cacheKey, data);
-                return data;
-            } catch (error) {
-                lastError = error;
-                console.warn(`Retry ${i + 1}/${retries} failed for ${url}:`, error);
-                if (i < retries - 1) {
-                    await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
-                }
+            if (i < retries - 1) {
+                await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
             }
         }
 

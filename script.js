@@ -47,36 +47,96 @@ document.addEventListener('DOMContentLoaded', async function() {
         }, 300);
     }
 
-    // 캐시 설정
-    const CACHE_DURATION = {
-        EXCHANGE_RATE: 60 * 60 * 1000, // 1시간
-        FEAR_GREED: 60 * 60 * 1000,    // 1시간
-        TOTAL_BTC: 30 * 60 * 1000      // 30분
-    };
+    // 캐시 관리 클래스
+    class CacheManager {
+        constructor() {
+            this.cache = {};
+            this.duration = {
+                exchangeRate: 60 * 60 * 1000,  // 1시간
+                fearGreed: 60 * 60 * 1000,    // 1시간
+                totalBtc: 30 * 60 * 1000      // 30분
+            };
+            this.loadFromLocalStorage();
+        }
 
-    // 캐시된 데이터
-    let cache = {
-        exchangeRate: { data: null, timestamp: 0 },
-        fearGreed: { data: null, timestamp: 0 },
-        totalBtc: { data: null, timestamp: 0 }
-    };
+        loadFromLocalStorage() {
+            try {
+                const saved = localStorage.getItem('bitcoinMonitorCache');
+                if (saved) {
+                    const parsed = JSON.parse(saved);
+                    // 유효한 캐시만 불러오기
+                    Object.keys(parsed).forEach(key => {
+                        if (this.isValid(key, parsed[key])) {
+                            this.cache[key] = parsed[key];
+                        }
+                    });
+                }
+            } catch (e) {
+                console.warn('캐시 로드 오류:', e);
+            }
+        }
 
-    // 캐시 확인 함수
-    function isValidCache(type) {
-        const cacheData = cache[type];
-        return cacheData.data && (Date.now() - cacheData.timestamp) < CACHE_DURATION[type];
+        saveToLocalStorage() {
+            try {
+                localStorage.setItem('bitcoinMonitorCache', JSON.stringify(this.cache));
+            } catch (e) {
+                console.warn('캐시 저장 오류:', e);
+            }
+        }
+
+        isValid(key, data) {
+            return data && 
+                   data.timestamp && 
+                   (Date.now() - data.timestamp) < this.duration[key];
+        }
+
+        get(key) {
+            return this.isValid(key, this.cache[key]) ? this.cache[key].data : null;
+        }
+
+        set(key, data) {
+            this.cache[key] = {
+                data,
+                timestamp: Date.now()
+            };
+            this.saveToLocalStorage();
+        }
+    }
+
+    const cacheManager = new CacheManager();
+
+    // API 요청 함수
+    async function fetchWithCache(url, cacheKey) {
+        if (cacheKey) {
+            const cached = cacheManager.get(cacheKey);
+            if (cached) return cached;
+        }
+
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`API ${url} failed: ${response.status}`);
+        
+        const data = cacheKey ? await response.json() : await response.text();
+        if (cacheKey) cacheManager.set(cacheKey, data);
+        
+        return data;
     }
 
     // 데이터 가져오기
     async function fetchData() {
         try {
-            // 서버 API 요청
-            const responses = await Promise.all([
-                fetch('/api/upbit'),
-                fetch('/api/binance'),
-                fetch('/api/fear-greed'),
-                fetch('/api/exchange-rate'),
-                fetch('/api/total-btc')
+            // 모든 API 요청 동시 실행
+            const [
+                upbitData,
+                binanceData,
+                fearGreed,
+                exchangeRate,
+                totalBtc
+            ] = await Promise.all([
+                fetchWithCache('https://api.upbit.com/v1/ticker?markets=KRW-BTC'),
+                fetchWithCache('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'),
+                fetchWithCache('https://api.alternative.me/fng/?limit=1', 'fearGreed'),
+                fetchWithCache('https://open.er-api.com/v6/latest/USD', 'exchangeRate'),
+                fetchWithCache('https://blockchain.info/q/totalbc', 'totalBtc')
             ]);
 
             // 응답 확인

@@ -183,7 +183,10 @@ document.addEventListener("DOMContentLoaded", async function () {
         } else if (url.includes("blockchain.info")) {
           data = parseInt(rawData);
         } else if (url.includes("binance.com")) {
-          data = rawData;
+          data = {
+            price: rawData.price,
+            volume: "0", // 24시간 거래량은 현재 API에서 제공하지 않음
+          };
         } else {
           data = rawData;
         }
@@ -223,7 +226,9 @@ document.addEventListener("DOMContentLoaded", async function () {
       const upbitData = Array.isArray(upbitDataRaw)
         ? upbitDataRaw[0]
         : upbitDataRaw;
-      const binanceData = binanceDataRaw;
+      const binanceData = {
+        price: binanceDataRaw.price || "0",
+      };
 
       const upbitPrice = upbitData?.trade_price || 0;
       const binancePrice = parseFloat(binanceData.price || "0");
@@ -341,7 +346,9 @@ document.addEventListener("DOMContentLoaded", async function () {
       const upbitData = Array.isArray(upbitDataRaw)
         ? upbitDataRaw[0]
         : upbitDataRaw;
-      const binanceData = binanceDataRaw;
+      const binanceData = {
+        price: binanceDataRaw.price || "0",
+      };
 
       const upbitPrice = upbitData?.trade_price || 0;
       const binancePrice = parseFloat(binanceData.price || "0");

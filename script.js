@@ -1,10 +1,9 @@
 // API 엔드포인트
 const BINANCE_API =
   "https://api1.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT";
-const UPBIT_API =
-  "https://crix-api-endpoint.upbit.com/v1/crix/candles/minutes/1?code=CRIX.UPBIT.KRW-BTC&count=1";
+const UPBIT_API = "https://api.upbit.com/v1/ticker?markets=KRW-BTC";
 // 무료 환율 API로 변경
-const EXCHANGE_RATE_API = "https://open.er-api.com/v6/latest/USD";
+const EXCHANGE_RATE_API = "https://api.exchangerate-api.com/v4/latest/USD";
 const FEAR_GREED_API = "https://api.alternative.me/fng/";
 const BLOCKCHAIN_INFO_API = "https://mempool.space/api/v1/blocks/tip/height";
 
@@ -37,22 +36,35 @@ const formatNumber = (number, decimals = 2) => {
 
 // API 호출 함수 수정
 async function fetchData(url, options = {}) {
-  try {
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        Accept: "application/json",
-        "Cache-Control": "no-cache",
-        ...options.headers,
-      },
-    });
+  const retries = 3;
+  let lastError;
 
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-    return await response.json();
-  } catch (error) {
-    console.error(`API 호출 실패 (${url}):`, error);
-    return null;
+  for (let i = 0; i < retries; i++) {
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          Accept: "application/json",
+          "Cache-Control": "no-cache",
+          ...options.headers,
+        },
+        mode: "cors",
+      });
+
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      lastError = error;
+      // 마지막 시도가 아니면 잠시 대기 후 재시도
+      if (i < retries - 1) {
+        await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
+      }
+    }
   }
+
+  console.error(`API 호출 실패 (${url}):`, lastError);
+  return null;
 }
 
 // Binance 데이터 가져오기

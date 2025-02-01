@@ -170,106 +170,48 @@ body {
 }
 
 @media (max-width: 768px) {
-  body {
-    font-size: 14px;
-  }
-
-  .container {
+  .content-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
     padding: 10px;
   }
 
-  .content-grid {
-    grid-template-columns: 1fr;
-    gap: 15px;
+  .price-section {
+    width: 100%;
+    margin: 0;
+    padding: 15px;
+    overflow: hidden;
   }
 
   .price-cards {
-    grid-template-columns: 1fr !important;
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 15px;
+    width: 100%;
   }
 
   .price-card {
-    height: auto;
-    min-height: 130px;
+    width: 100%;
+    min-height: 200px;
     padding: 15px;
+    margin: 0;
   }
 
-  .price-card .price-value {
+  .price-content {
+    padding: 10px 0;
+  }
+
+  .price-value {
     font-size: 1.8em;
   }
 
-  .price-details {
-    gap: 10px;
-    min-height: 40px;
-  }
-
   .detail-item {
-    font-size: 0.85em;
-  }
-
-  .price-card {
-    height: auto;
-    min-height: 150px;
-    padding: 5px;
-    width: 100%;
-    box-sizing: border-box;
-  }
-
-  .price-card .price-content {
-    min-height: 40px;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    box-sizing: border-box;
-    margin: 5px 0;
-  }
-
-  .price-card .price-value {
-    font-size: 1.8em;
-  }
-
-  .upbit-price,
-  .binance-price {
-    font-size: 0.8em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    max-width: 100%;
-    padding: 0;
-    line-height: 1;
-  }
-
-  .price-card .price-content .price-value {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 100%;
-    text-align: center;
-  }
-
-  .price-details {
-    min-height: 60px;
-    gap: 10px;
-  }
-
-  .detail-item {
-    font-size: 0.85em;
+    font-size: 0.9em;
   }
 
   .right-section {
-    gap: 15px;
-  }
-
-  .satoshi-card {
-    height: 90px;
-    padding: 15px;
-  }
-
-  .satoshi-card .info-value {
-    font-size: 1.2em;
+    padding: 0;
   }
 }
 
@@ -461,16 +403,6 @@ body {
 .detail-item i {
   color: #f7931a;
   margin-bottom: 5px;
-}
-
-@media (max-width: 768px) {
-  .price-cards {
-    grid-template-columns: 1fr;
-  }
-
-  .price-card {
-    min-height: 180px;
-  }
 }
 
 .price-section:hover {

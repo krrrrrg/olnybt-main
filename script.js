@@ -34,21 +34,18 @@ const formatNumber = (number, decimals = 2) => {
   });
 };
 
-// API 호출 함수 수정
-async function fetchData(url, options = {}) {
+// API 호출 함수 수정 - 헤더 단순화
+async function fetchData(url) {
   const retries = 3;
   let lastError;
 
   for (let i = 0; i < retries; i++) {
     try {
       const response = await fetch(url, {
-        ...options,
+        method: "GET",
         headers: {
           Accept: "application/json",
-          "Cache-Control": "no-cache",
-          ...options.headers,
         },
-        mode: "cors",
       });
 
       if (!response.ok)
@@ -56,9 +53,8 @@ async function fetchData(url, options = {}) {
       return await response.json();
     } catch (error) {
       lastError = error;
-      // 마지막 시도가 아니면 잠시 대기 후 재시도
       if (i < retries - 1) {
-        await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     }
   }
@@ -197,25 +193,18 @@ function updateSatoshiValue(binancePrice, upbitPrice) {
   }
 }
 
-// 채굴 데이터 가져오기
+// 채굴 데이터 가져오기 함수 수정
 async function fetchMiningData() {
   try {
-    // 총 채굴된 비트코인 조회
-    const totalMinedResponse = await fetch(BLOCKCHAIN_INFO_API);
+    const response = await fetch("https://blockchain.info/q/totalbc");
+    if (!response.ok) throw new Error("Blockchain API 응답 오류");
 
-    if (!totalMinedResponse.ok) {
-      throw new Error("Blockchain API 응답 오류");
-    }
+    const totalMinedSatoshi = await response.text();
+    const totalMinedBTC = parseInt(totalMinedSatoshi) / 100000000; // satoshi to BTC
+    const remainingBTC = 21000000 - totalMinedBTC; // 남은 채굴량 계산
 
-    const totalMined = await totalMinedResponse.text();
-
-    // satoshi to BTC conversion (1 BTC = 100,000,000 satoshi)
-    const totalBTC = parseInt(totalMined) / 100000000;
-    const remainingBTC = 21000000 - totalBTC;
-
-    // 채굴된 비트코인과 남은 채굴량 표시
     document.getElementById("btc-mined").textContent = `${formatNumber(
-      totalBTC,
+      totalMinedBTC,
       0
     )} BTC`;
     document.getElementById("btc-remaining").textContent = `${formatNumber(

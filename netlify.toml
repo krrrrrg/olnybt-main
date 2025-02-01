@@ -14,8 +14,8 @@
   for = "/*"
     [headers.values]
     Access-Control-Allow-Origin = "*"
-    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
-    Access-Control-Allow-Headers = "*"
+    Access-Control-Allow-Methods = "GET, OPTIONS"
+    Access-Control-Allow-Headers = "Accept, Content-Type"
     Access-Control-Max-Age = "86400"
     Cache-Control = "public, max-age=60"
     X-Frame-Options = "DENY"
@@ -30,19 +30,19 @@
   headers = {Access-Control-Allow-Origin = "*"}
 
 [[redirects]]
-  from = "/api/binance/*"
-  to = "https://api1.binance.com/:splat"
+  from = "/api/binance"
+  to = "https://api1.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT"
   status = 200
   force = true
 
 [[redirects]]
-  from = "/api/upbit/*"
-  to = "https://crix-api-endpoint.upbit.com/:splat"
+  from = "/api/upbit"
+  to = "https://api.upbit.com/v1/ticker?markets=KRW-BTC"
   status = 200
   force = true
 
 [[redirects]]
-  from = "/api/exchange/*"
-  to = "https://open.er-api.com/:splat"
+  from = "/api/blockchain"
+  to = "https://blockchain.info/q/totalbc"
   status = 200
   force = true 

@@ -86,19 +86,23 @@ document.addEventListener("DOMContentLoaded", async function () {
   const API_ENDPOINTS = {
     upbit: {
       url: "https://api.upbit.com/v1/ticker?markets=KRW-BTC",
-      proxy: "https://api.allorigins.win/raw?url=",
+      proxy: "https://cors-anywhere.herokuapp.com/",
+      requiresKey: false,
     },
     binance: {
       url: "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT",
-      proxy: "https://proxy.cors.sh/",
+      proxy: "https://cors-anywhere.herokuapp.com/",
+      requiresKey: false,
     },
     exchangeRate: {
       url: "https://open.er-api.com/v6/latest/USD",
       proxy: "",
+      requiresKey: false,
     },
     totalBtc: {
       url: "https://blockchain.info/q/totalbc",
-      proxy: "https://api.allorigins.win/raw?url=",
+      proxy: "https://cors-anywhere.herokuapp.com/",
+      requiresKey: false,
     },
   };
 
@@ -137,8 +141,10 @@ document.addEventListener("DOMContentLoaded", async function () {
       cacheKey = null,
       timeout = 8000,
     } = options;
-    const { url, proxy } =
-      typeof endpoint === "string" ? { url: endpoint, proxy: "" } : endpoint;
+    const { url, proxy, requiresKey, apiKey } =
+      typeof endpoint === "string"
+        ? { url: endpoint, proxy: "", requiresKey: false }
+        : endpoint;
 
     if (cacheKey) {
       const cached = cacheManager.get(cacheKey);
@@ -151,17 +157,26 @@ document.addEventListener("DOMContentLoaded", async function () {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-        const finalUrl = proxy ? `${proxy}${encodeURIComponent(url)}` : url;
+        const finalUrl = proxy ? `${proxy}${url}` : url;
         console.log(`Fetching: ${finalUrl}`);
+
+        const headers = {
+          Accept: "application/json",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+          Origin: window.location.origin,
+          "X-Requested-With": "XMLHttpRequest",
+        };
+
+        // Add proxy API key if required
+        if (requiresKey && apiKey) {
+          headers["x-cors-api-key"] = apiKey;
+        }
 
         const response = await fetch(finalUrl, {
           signal: controller.signal,
-          headers: {
-            Accept: "application/json",
-            "Cache-Control": "no-cache",
-            "x-cors-api-key": "temp_f34f25a0594c36dca4c4d55b74a37e6f",
-            Origin: window.location.origin,
-          },
+          headers: headers,
         });
 
         clearTimeout(timeoutId);

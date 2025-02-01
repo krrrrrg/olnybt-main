@@ -230,22 +230,17 @@ body {
 
 /* Price Section */
 .price-section {
-  background: #1e293b;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
-    0 2px 4px -1px rgba(0, 0, 0, 0.06);
   display: flex;
-  flex-direction: column;
-  min-height: 500px;
-  overflow: hidden;
-  position: relative;
-  width: 100%;
-  touch-action: pan-x;
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
-.price-section .section-title {
-  margin-bottom: 30px;
+.price-box {
+  flex: 1;
+  background-color: var(--card-bg);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  position: relative;
 }
 
 .price-cards {
@@ -266,11 +261,6 @@ body {
   align-items: center;
   height: 350px;
   justify-content: space-between;
-  transition: transform 0.3s ease;
-  min-width: 100%;
-  position: absolute;
-  left: 0;
-  top: 0;
 }
 
 .price-card > * {
@@ -522,10 +512,9 @@ body {
   width: 100%;
   height: 600px;
   margin: 20px 0;
-  padding: 20px;
-  border-radius: 12px;
+  border-radius: 8px;
   overflow: hidden;
-  background: var(--card-bg);
+  background: #1e222d;
 }
 
 .tradingview-widget-container {
@@ -547,9 +536,6 @@ body {
   min-height: 500px;
   position: relative;
   overflow: hidden;
-  height: 600px;
-  margin-bottom: 20px;
-  border-radius: 8px;
 }
 
 .chart h2 {
@@ -727,7 +713,7 @@ body.light-mode {
   }
 
   .price-section {
-    margin-bottom: 20px;
+    margin-bottom: 0;
   }
 
   .price-cards {
@@ -736,31 +722,6 @@ body.light-mode {
 
   .price-card {
     padding: 15px;
-  }
-
-  .chart {
-    height: 400px;
-  }
-
-  /* 스와이프 인디케이터 추가 */
-  .price-indicator {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-    margin-top: 10px;
-  }
-
-  .indicator-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--text-secondary);
-    opacity: 0.5;
-  }
-
-  .indicator-dot.active {
-    opacity: 1;
-    background: var(--accent);
   }
 }
 
@@ -889,4 +850,32 @@ body.light-mode .fear-greed-meter img {
   background: #2d3748;
   border-radius: 8px;
   padding: 15px;
+}
+
+/* 모바일 화면에서 가격 텍스트 크기 조정 */
+@media (max-width: 768px) {
+  .price-box .price {
+    font-size: 1.8rem; /* 더 작은 폰트 크기 */
+    word-break: break-all; /* 긴 숫자 자동 줄바꿈 */
+    line-height: 1.2; /* 줄 간격 조정 */
+  }
+
+  .price-box {
+    padding: 1rem; /* 패딩 줄임 */
+  }
+
+  .price-details {
+    font-size: 0.8rem; /* 세부 정보 폰트 크기 줄임 */
+  }
+}
+
+/* 더 작은 모바일 화면 대응 */
+@media (max-width: 375px) {
+  .price-box .price {
+    font-size: 1.5rem; /* 더 작은 폰트 크기 */
+  }
+
+  .price-box {
+    padding: 0.8rem; /* 패딩 더 줄임 */
+  }
 }

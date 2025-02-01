@@ -170,12 +170,18 @@
                   enable_publishing: false,
                   hide_side_toolbar: false,
                   allow_symbol_change: true,
-                  details: true,
-                  hotlist: true,
-                  calendar: true,
                   container_id: "tradingview_btc",
                   hide_volume: false,
                   studies: ["MASimple@tv-basicstudies", "RSI@tv-basicstudies"],
+                  library_path: "https://s3.tradingview.com/",
+                  loading_screen: { backgroundColor: "#000000" },
+                  disabled_features: ["use_localstorage_for_settings"],
+                  enabled_features: ["study_templates"],
+                  overrides: {
+                    "mainSeriesProperties.style": 1,
+                    "symbolWatermarkProperties.color": "#944",
+                    volumePaneSize: "medium",
+                  },
                 });
               </script>
             </div>

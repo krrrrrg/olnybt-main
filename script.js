@@ -199,8 +199,34 @@ async function updateAllData() {
   fetchFearGreedIndex();
 }
 
-// 초기 데이터 로드 및 주기적 업데이트 설정
+// TradingView 위젯 오류 핸들링
+window.addEventListener(
+  "error",
+  function (e) {
+    if (
+      e.message.includes("tradingview") ||
+      e.filename.includes("tradingview")
+    ) {
+      console.warn("TradingView 위젯 경고:", e.message);
+      return false; // 콘솔에 오류 표시 방지
+    }
+  },
+  true
+);
+
+// DOMContentLoaded 이벤트 리스너 내부
 document.addEventListener("DOMContentLoaded", () => {
   updateAllData();
   setInterval(updateAllData, UPDATE_INTERVAL);
+
+  // TradingView 위젯 로드 상태 체크
+  const tvScript = document.querySelector('script[src*="tradingview"]');
+  if (tvScript) {
+    tvScript.addEventListener("load", () => {
+      console.log("TradingView 위젯 로드 완료");
+    });
+    tvScript.addEventListener("error", () => {
+      console.warn("TradingView 위젯 로드 실패");
+    });
+  }
 });

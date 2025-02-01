@@ -1,30 +1,39 @@
 // API 엔드포인트
 const BINANCE_API = "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT";
 const UPBIT_API = "https://api.upbit.com/v1/ticker?markets=KRW-BTC";
-const EXCHANGE_RATE_API =
-  "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/usd/krw.json";
+// 무료 환율 API로 변경
+const EXCHANGE_RATE_API = "https://api.exchangerate-api.com/v4/latest/USD";
 const FEAR_GREED_API = "https://api.alternative.me/fng/";
-
-// 채굴 관련 API 추가
 const BLOCKCHAIN_INFO_API = "https://blockchain.info/q/";
 
-// 프록시 서버 설정
+// 프록시 서버 설정 수정
 const PROXY_URLS = [
-  "https://cors.bridged.cc/",
   "https://api.allorigins.win/raw?url=",
+  "https://api.codetabs.com/v1/proxy?quest=",
   "https://corsproxy.io/?",
 ];
 
 let currentProxyIndex = 0;
 
-// 프록시 URL 순환
+// 프록시 URL 순환 함수
 function getNextProxy() {
   const proxy = PROXY_URLS[currentProxyIndex];
   currentProxyIndex = (currentProxyIndex + 1) % PROXY_URLS.length;
   return proxy;
 }
 
-// API 호출 함수
+// 데이터 업데이트 간격 조정
+const UPDATE_INTERVAL = 15000;
+
+// 숫자 포맷팅 함수
+const formatNumber = (number, decimals = 2) => {
+  return Number(number).toLocaleString("ko-KR", {
+    maximumFractionDigits: decimals,
+    minimumFractionDigits: decimals,
+  });
+};
+
+// API 호출 함수 수정
 async function fetchWithRetry(url, options = {}, retries = 3) {
   for (let i = 0; i < retries; i++) {
     try {
@@ -40,21 +49,11 @@ async function fetchWithRetry(url, options = {}, retries = 3) {
   }
 }
 
-// 데이터 업데이트 간격 조정
-const UPDATE_INTERVAL = 15000;
-
-// 숫자 포맷팅 함수
-const formatNumber = (number, decimals = 2) => {
-  return Number(number).toLocaleString("ko-KR", {
-    maximumFractionDigits: decimals,
-    minimumFractionDigits: decimals,
-  });
-};
-
-// Binance 데이터 가져오기
+// Binance 데이터 가져오기 수정
 async function fetchBinanceData() {
   try {
     const data = await fetchWithRetry(BINANCE_API);
+
     if (data && data.lastPrice) {
       document.getElementById("binance-price").textContent = `$${formatNumber(
         data.lastPrice
@@ -78,26 +77,26 @@ async function fetchBinanceData() {
   }
 }
 
-// Upbit 데이터 가져오기
+// Upbit 데이터 가져오기 수정
 async function fetchUpbitData() {
   try {
     const data = await fetchWithRetry(UPBIT_API);
-    if (data && data[0]) {
-      const ticker = data[0];
+
+    if (data) {
       document.getElementById("upbit-price").textContent = `₩${formatNumber(
-        ticker.trade_price
+        data.trade_price
       )}`;
       document.getElementById("upbit-24h-high").textContent = `₩${formatNumber(
-        ticker.high_price
+        data.high_price
       )}`;
       document.getElementById("upbit-24h-low").textContent = `₩${formatNumber(
-        ticker.low_price
+        data.low_price
       )}`;
       document.getElementById("upbit-24h-volume").textContent = `${formatNumber(
-        ticker.acc_trade_volume_24h,
+        data.acc_trade_volume_24h,
         1
       )} BTC`;
-      return parseFloat(ticker.trade_price);
+      return parseFloat(data.trade_price);
     }
     return null;
   } catch (error) {
@@ -114,7 +113,7 @@ async function fetchExchangeRate() {
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
     const data = await response.json();
-    const rate = data.krw;
+    const rate = data.rates.KRW;
 
     document.getElementById("exchange-rate").textContent = `${formatNumber(
       rate
@@ -192,21 +191,26 @@ function updateSatoshiValue(binancePrice, upbitPrice) {
 // 채굴 데이터 가져오기
 async function fetchMiningData() {
   try {
-    const [totalBTC, remainingBTC] = await Promise.all([
-      fetch(BLOCKCHAIN_INFO_API + "totalbc").then((res) => res.text()),
-      fetch(BLOCKCHAIN_INFO_API + "totalmined").then((res) => res.text()),
-    ]);
+    // 총 채굴된 비트코인 조회
+    const totalMinedResponse = await fetch(BLOCKCHAIN_INFO_API + "totalbc");
 
-    const total = parseInt(totalBTC) / 100000000;
-    const mined = parseInt(remainingBTC) / 100000000;
-    const remaining = 21000000 - mined;
+    if (!totalMinedResponse.ok) {
+      throw new Error("Blockchain API 응답 오류");
+    }
 
+    const totalMined = await totalMinedResponse.text();
+
+    // satoshi to BTC conversion (1 BTC = 100,000,000 satoshi)
+    const totalBTC = parseInt(totalMined) / 100000000;
+    const remainingBTC = 21000000 - totalBTC;
+
+    // 채굴된 비트코인과 남은 채굴량 표시
     document.getElementById("btc-mined").textContent = `${formatNumber(
-      mined,
+      totalBTC,
       0
     )} BTC`;
     document.getElementById("btc-remaining").textContent = `${formatNumber(
-      remaining,
+      remainingBTC,
       0
     )} BTC`;
   } catch (error) {
@@ -219,28 +223,36 @@ async function fetchMiningData() {
 // 데이터 업데이트 함수 수정
 async function updateAllData() {
   try {
-    // 기존 데이터 업데이트
-    const [binancePrice, upbitPrice] = await Promise.all([
+    const [binancePrice, upbitPrice, exchangeRate] = await Promise.all([
       fetchBinanceData().catch(() => null),
       fetchUpbitData().catch(() => null),
+      fetchExchangeRate().catch(() => null),
     ]);
 
     // 사토시 가치 업데이트
     updateSatoshiValue(binancePrice, upbitPrice);
 
-    // 환율과 김치프리미엄
-    const exchangeRate = await fetchExchangeRate().catch(() => null);
+    // 김치프리미엄 계산
     if (binancePrice && upbitPrice && exchangeRate) {
       calculateKimchiPremium(upbitPrice, binancePrice, exchangeRate);
     }
 
-    // 채굴 데이터는 1분에 한 번만 업데이트
+    // 채굴 데이터 업데이트 (1분에 한 번)
     if (
       !window.lastMiningUpdate ||
       Date.now() - window.lastMiningUpdate > 60000
     ) {
       await fetchMiningData();
       window.lastMiningUpdate = Date.now();
+    }
+
+    // 공포/탐욕 지수 업데이트 (5분에 한 번)
+    if (
+      !window.lastFearGreedUpdate ||
+      Date.now() - window.lastFearGreedUpdate > 300000
+    ) {
+      await fetchFearGreedIndex();
+      window.lastFearGreedUpdate = Date.now();
     }
   } catch (error) {
     console.error("데이터 업데이트 실패:", error);
@@ -266,6 +278,8 @@ window.addEventListener(
 // DOMContentLoaded 이벤트 리스너 내부
 document.addEventListener("DOMContentLoaded", () => {
   console.log("데이터 로딩 시작...");
+
+  // 다른 데이터 업데이트
   updateAllData();
   setInterval(updateAllData, UPDATE_INTERVAL);
 });

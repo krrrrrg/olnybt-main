@@ -1,145 +1,249 @@
-/* Reset some default styles */
-body, h1, h2, p {
+/* Reset and base styles */
+* {
     margin: 0;
     padding: 0;
-    font-family: 'Roboto', sans-serif;
-    color: #f4f4f4;
+    box-sizing: border-box;
 }
 
 body {
-    background-color: #1e1e1e; /* 다크 모드 기본 배경색 */
-    transition: background-color 0.3s, color 0.3s;
+    font-family: 'Inter', sans-serif;
+    background-color: #0f172a;
+    color: #e2e8f0;
+    transition: all 0.3s ease;
+    min-height: 100vh;
 }
 
 .container {
-    max-width: 800px;
+    max-width: 1200px;
     margin: 0 auto;
     padding: 20px;
 }
 
+/* Header styles */
 .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    padding: 20px 0;
+    margin-bottom: 30px;
 }
 
-h1 {
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo i {
     font-size: 2em;
-    color: #f4f4f4;
+    color: #f7931a;
 }
 
-h2 {
+.logo h1 {
     font-size: 1.5em;
-    margin-bottom: 10px;
+    font-weight: 700;
+    background: linear-gradient(to right, #f7931a, #ffd700);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .mode-button {
-    padding: 10px 20px;
-    background-color: #444;
-    color: #ddd;
+    background: #1e293b;
     border: none;
-    border-radius: 5px;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     cursor: pointer;
-    font-size: 1em;
-    transition: background-color 0.3s;
-}
-
-.mode-button:hover {
-    background-color: #666;
-}
-
-.card {
-    background: #2e2e2e;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-    transition: box-shadow 0.3s ease;
-}
-
-.card:hover {
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-}
-
-.price-info p {
-    font-size: 1.2em;
-    margin-bottom: 10px;
-}
-
-.price-info span {
-    font-weight: bold;
-    color: #9acd32;
-}
-
-.fear-greed-meter img {
-    width: 80%;
-    margin-top: 10px;
+    color: #f7931a;
     transition: all 0.3s ease;
 }
 
-.fear-greed-meter p {
+.mode-button:hover {
+    background: #334155;
+    transform: scale(1.1);
+}
+
+/* Dashboard Grid */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+/* Card Styles */
+.card {
+    background: #1e293b;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.info-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.info-header i {
+    color: #f7931a;
     font-size: 1.2em;
-    margin-top: 10px;
 }
 
+.info-header h2 {
+    font-size: 1.2em;
+    font-weight: 600;
+}
+
+/* Price Display */
+.main-price {
+    grid-column: span 2;
+}
+
+.price-content {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.price-item {
+    text-align: center;
+    padding: 20px;
+    background: #2d3748;
+    border-radius: 12px;
+}
+
+.exchange-tag {
+    font-size: 0.9em;
+    color: #f7931a;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.price-value {
+    display: block;
+    font-size: 1.8em;
+    font-weight: 700;
+    color: #f7931a;
+    margin: 10px 0;
+}
+
+.price-label {
+    font-size: 0.9em;
+    color: #a0aec0;
+}
+
+/* Info Grid */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 15px;
+}
+
+.info-item {
+    background: #2d3748;
+    padding: 15px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.info-label {
+    font-size: 0.9em;
+    color: #a0aec0;
+    margin-bottom: 8px;
+}
+
+.info-value {
+    font-size: 1.2em;
+    font-weight: 600;
+    color: #f7931a;
+}
+
+/* Fear & Greed Card */
+.fear-greed-card {
+    grid-column: span 2;
+}
+
+.fear-greed-meter {
+    text-align: center;
+}
+
+.fear-greed-chart {
+    max-width: 100%;
+    height: auto;
+    margin-top: 20px;
+    border-radius: 8px;
+}
+
+/* Chart Card */
+.chart-card {
+    grid-column: span 2;
+}
+
+.chart-container {
+    border-radius: 12px;
+    overflow: hidden;
+    background: #2d3748;
+}
+
+/* Light Mode */
 body.light-mode {
-    background-color: #f7f8fa;
-    color: #333;
+    background-color: #f8fafc;
+    color: #1e293b;
 }
 
 body.light-mode .card {
-    background-color: #ffffff;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background: #ffffff;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 body.light-mode .mode-button {
-    background-color: #007bff;
-    color: #ffffff;
+    background: #f1f5f9;
+    color: #1e293b;
 }
 
-body.light-mode .price-info span {
-    color: #28a745;
+body.light-mode .price-item,
+body.light-mode .info-item {
+    background: #f1f5f9;
 }
 
-body.light-mode .card {
-    background-color: white;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-body.light-mode .mode-button {
-    background-color: #007bff;
-    color: white;
-}
-
-
-
-/* 반응형 디자인 */
+/* Responsive Design */
 @media (max-width: 768px) {
     .container {
         padding: 10px;
     }
 
-    .card {
-        margin-bottom: 15px;
-        padding: 15px;
+    .dashboard-grid {
+        grid-template-columns: 1fr;
     }
 
-    h1 {
+    .main-price,
+    .fear-greed-card,
+    .chart-card {
+        grid-column: span 1;
+    }
+
+    .price-content {
+        grid-template-columns: 1fr;
+    }
+
+    .price-value {
         font-size: 1.5em;
     }
 
-    .price-info p {
-        font-size: 1em;
+    .info-grid {
+        grid-template-columns: 1fr;
     }
-
-    .fear-greed-meter img {
-        width: 100%;
-    }
-}
-
-body.light-mode h1, body.light-mode h2, body.light-mode p {
-    color: #333;
 }
 
 body.light-mode .price-info span {

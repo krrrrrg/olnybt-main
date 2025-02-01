@@ -89,20 +89,20 @@ document.addEventListener("DOMContentLoaded", async function () {
   // API 엔드포인트 설정 수정
   const API_ENDPOINTS = {
     upbit: {
-      url: "https://crix-api-endpoint.upbit.com/v1/crix/candles/minutes/1?code=CRIX.UPBIT.KRW-BTC&count=1",
-      proxy: "https://corsproxy.io/?",
+      url: "https://api.upbit.com/v1/trades/ticks?market=KRW-BTC&count=1",
+      proxy: "https://api.codetabs.com/v1/proxy?quest=",
     },
     binance: {
-      url: "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT",
-      proxy: "https://corsproxy.io/?",
+      url: "https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT",
+      proxy: "https://api.codetabs.com/v1/proxy?quest=",
     },
     exchangeRate: {
       url: "https://open.er-api.com/v6/latest/USD",
       proxy: "",
     },
     totalBtc: {
-      url: "https://blockchain.info/q/totalbc",
-      proxy: "https://corsproxy.io/?",
+      url: "https://api.blockchain.info/stats",
+      proxy: "https://api.codetabs.com/v1/proxy?quest=",
     },
   };
 
@@ -143,22 +143,28 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
 
         const rawData = await response.json();
-        // 업비트 데이터 구조 변경에 따른 처리
+        // 데이터 구조 처리
         let data;
-        if (url.includes("crix-api-endpoint.upbit.com")) {
+        if (url.includes("api.upbit.com")) {
           data = rawData[0]
             ? {
-                trade_price: rawData[0].tradePrice,
-                high_price: rawData[0].highPrice,
-                low_price: rawData[0].lowPrice,
-                acc_trade_volume_24h: rawData[0].candleAccTradeVolume,
+                trade_price: rawData[0].trade_price,
+                high_price: rawData[0].trade_price,
+                low_price: rawData[0].trade_price,
+                acc_trade_volume_24h: 0,
               }
             : null;
+        } else if (url.includes("blockchain.info")) {
+          data = rawData.total_btc;
+        } else if (url.includes("binance.com")) {
+          data = {
+            lastPrice: rawData.price,
+            highPrice: rawData.price,
+            lowPrice: rawData.price,
+            volume: "0",
+          };
         } else {
-          data =
-            proxy && !url.includes("blockchain.info")
-              ? JSON.parse(rawData.contents)
-              : rawData;
+          data = rawData;
         }
 
         if (cacheKey) cacheManager.set(cacheKey, data);
@@ -201,7 +207,12 @@ document.addEventListener("DOMContentLoaded", async function () {
       const binanceData =
         binanceDataRaw.code === 0
           ? { lastPrice: "0", highPrice: "0", lowPrice: "0", volume: "0" }
-          : binanceDataRaw;
+          : {
+              lastPrice: binanceDataRaw.price || "0",
+              highPrice: binanceDataRaw.price || "0",
+              lowPrice: binanceDataRaw.price || "0",
+              volume: "0",
+            };
 
       const upbitPrice = upbitData?.trade_price || 0;
       const binancePrice = parseFloat(binanceData?.lastPrice || "0");

@@ -26,21 +26,23 @@ document.addEventListener('DOMContentLoaded', async function() {
             });
 
             // API 요청
-            const [upbitTicker, binanceTicker, fearGreedData] = await Promise.all([
+            const [upbitTicker, binanceTicker, fearGreedData, exchangeRateData] = await Promise.all([
                 fetch('https://api.upbit.com/v1/ticker?markets=KRW-BTC'),
                 fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'),
-                fetch('https://api.alternative.me/fng/?limit=1')
+                fetch('https://api.alternative.me/fng/?limit=1'),
+                fetch('https://open.er-api.com/v6/latest/USD')
             ]);
 
             // 데이터 추출
             const upbitData = await upbitTicker.json();
             const binanceData = await binanceTicker.json();
             const fearGreed = await fearGreedData.json();
+            const exchangeRate = await exchangeRateData.json();
 
             // 값 추출 및 계산
             const upbitPrice = upbitData[0].trade_price;
             const binancePrice = parseFloat(binanceData.lastPrice);
-            const exchangeRate = upbitPrice / binancePrice;
+            const usdKrwRate = exchangeRate.rates.KRW;
             
             // 업비트 데이터 업데이트
             elements.upbitPrice.textContent = `${upbitData[0].trade_price.toLocaleString()} KRW`;
@@ -55,7 +57,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             elements.binanceVolume.textContent = `${parseFloat(binanceData.volume).toFixed(2)} BTC`;
 
             // 환율 업데이트
-            elements.exchangeRate.textContent = `${exchangeRate.toLocaleString(undefined, {maximumFractionDigits: 0})}`;
+            elements.exchangeRate.textContent = `${usdKrwRate.toLocaleString(undefined, {maximumFractionDigits: 2})}`;
 
             // 공포/탐욕 지수 업데이트
             elements.fearGreed.textContent = fearGreed.data[0].value;

@@ -169,29 +169,29 @@ document.addEventListener('DOMContentLoaded', async function() {
                 exchangeRate,
                 totalBtc
             ] = await Promise.all([
-                fetchWithRetry('https://crix-api-endpoint.upbit.com/v1/crix/candles/minutes/1?code=CRIX.UPBIT.KRW-BTC&count=1', {
+                fetchWithRetry('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://api.upbit.com/v1/ticker?markets=KRW-BTC'), {
                     retries: 3,
                     delay: 1000,
                     timeout: 5000
                 }),
-                fetchWithRetry('https://api3.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT', {
+                fetchWithRetry('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'), {
                     retries: 3,
                     delay: 1000,
                     timeout: 5000
                 }),
-                fetchWithRetry('https://api.alternative.me/fng/?limit=1', {
+                fetchWithRetry('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://api.alternative.me/fng/?limit=1'), {
                     retries: 2,
                     delay: 2000,
                     cacheKey: 'fearGreed',
                     timeout: 8000
                 }),
-                fetchWithRetry('https://open.er-api.com/v6/latest/USD', {
+                fetchWithRetry('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://open.er-api.com/v6/latest/USD'), {
                     retries: 2,
                     delay: 2000,
                     cacheKey: 'exchangeRate',
                     timeout: 8000
                 }),
-                fetchWithRetry('https://blockchain.info/q/totalbc', {
+                fetchWithRetry('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://blockchain.info/q/totalbc'), {
                     retries: 2,
                     delay: 2000,
                     cacheKey: 'totalBtc',

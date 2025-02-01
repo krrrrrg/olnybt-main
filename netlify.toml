@@ -15,7 +15,9 @@
     [headers.values]
     Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
-    Access-Control-Allow-Headers = "Origin, X-Requested-With, Content-Type, Accept"
+    Access-Control-Allow-Headers = "*"
+    Access-Control-Max-Age = "86400"
+    Cache-Control = "public, max-age=60"
 
 [[redirects]]
   from = "/api/*"
@@ -26,18 +28,18 @@
 
 [[redirects]]
   from = "/api/binance/*"
-  to = "https://api.binance.com/:splat"
+  to = "https://api1.binance.com/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/api/upbit/*"
-  to = "https://api.upbit.com/:splat"
+  to = "https://crix-api-endpoint.upbit.com/:splat"
   status = 200
   force = true
 
 [[redirects]]
   from = "/api/exchange/*"
-  to = "https://api.exchangerate-api.com/:splat"
+  to = "https://open.er-api.com/:splat"
   status = 200
   force = true 

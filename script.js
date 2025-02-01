@@ -1,10 +1,12 @@
 // API 엔드포인트
-const BINANCE_API = "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT";
-const UPBIT_API = "https://api.upbit.com/v1/ticker?markets=KRW-BTC";
+const BINANCE_API =
+  "https://api1.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT";
+const UPBIT_API =
+  "https://crix-api-endpoint.upbit.com/v1/crix/candles/minutes/1?code=CRIX.UPBIT.KRW-BTC&count=1";
 // 무료 환율 API로 변경
-const EXCHANGE_RATE_API = "https://api.exchangerate-api.com/v4/latest/USD";
+const EXCHANGE_RATE_API = "https://open.er-api.com/v6/latest/USD";
 const FEAR_GREED_API = "https://api.alternative.me/fng/";
-const BLOCKCHAIN_INFO_API = "https://blockchain.info/q/";
+const BLOCKCHAIN_INFO_API = "https://mempool.space/api/v1/blocks/tip/height";
 
 // 프록시 서버 설정 수정
 const PROXY_URLS = [
@@ -34,73 +36,68 @@ const formatNumber = (number, decimals = 2) => {
 };
 
 // API 호출 함수 수정
-async function fetchWithRetry(url, options = {}, retries = 3) {
-  for (let i = 0; i < retries; i++) {
-    try {
-      const proxy = getNextProxy();
-      const response = await fetch(proxy + encodeURIComponent(url), options);
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
-      return await response.json();
-    } catch (error) {
-      if (i === retries - 1) throw error;
-      await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
-    }
+async function fetchData(url, options = {}) {
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers: {
+        Accept: "application/json",
+        "Cache-Control": "no-cache",
+        ...options.headers,
+      },
+    });
+
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error(`API 호출 실패 (${url}):`, error);
+    return null;
   }
 }
 
-// Binance 데이터 가져오기 수정
+// Binance 데이터 가져오기
 async function fetchBinanceData() {
-  try {
-    const data = await fetchWithRetry(BINANCE_API);
-
-    if (data && data.lastPrice) {
-      document.getElementById("binance-price").textContent = `$${formatNumber(
-        data.lastPrice
-      )}`;
-      document.getElementById(
-        "binance-24h-high"
-      ).textContent = `$${formatNumber(data.highPrice)}`;
-      document.getElementById("binance-24h-low").textContent = `$${formatNumber(
-        data.lowPrice
-      )}`;
-      document.getElementById(
-        "binance-24h-volume"
-      ).textContent = `${formatNumber(data.volume, 1)} BTC`;
-      return parseFloat(data.lastPrice);
-    }
-    return null;
-  } catch (error) {
-    console.error("Binance 데이터 조회 실패:", error);
+  const data = await fetchData(BINANCE_API);
+  if (data?.lastPrice) {
+    document.getElementById("binance-price").textContent = `$${formatNumber(
+      data.lastPrice
+    )}`;
+    document.getElementById("binance-24h-high").textContent = `$${formatNumber(
+      data.highPrice
+    )}`;
+    document.getElementById("binance-24h-low").textContent = `$${formatNumber(
+      data.lowPrice
+    )}`;
+    document.getElementById("binance-24h-volume").textContent = `${formatNumber(
+      data.volume,
+      1
+    )} BTC`;
+    return parseFloat(data.lastPrice);
+  } else {
     document.getElementById("binance-price").textContent = "일시적 오류";
     return null;
   }
 }
 
-// Upbit 데이터 가져오기 수정
+// Upbit 데이터 가져오기
 async function fetchUpbitData() {
-  try {
-    const data = await fetchWithRetry(UPBIT_API);
-
-    if (data) {
-      document.getElementById("upbit-price").textContent = `₩${formatNumber(
-        data.trade_price
-      )}`;
-      document.getElementById("upbit-24h-high").textContent = `₩${formatNumber(
-        data.high_price
-      )}`;
-      document.getElementById("upbit-24h-low").textContent = `₩${formatNumber(
-        data.low_price
-      )}`;
-      document.getElementById("upbit-24h-volume").textContent = `${formatNumber(
-        data.acc_trade_volume_24h,
-        1
-      )} BTC`;
-      return parseFloat(data.trade_price);
-    }
-    return null;
-  } catch (error) {
-    console.error("Upbit 데이터 조회 실패:", error);
+  const data = await fetchData(UPBIT_API);
+  if (data?.[0]?.tradePrice) {
+    document.getElementById("upbit-price").textContent = `₩${formatNumber(
+      data[0].tradePrice
+    )}`;
+    document.getElementById("upbit-24h-high").textContent = `₩${formatNumber(
+      data[0].highPrice
+    )}`;
+    document.getElementById("upbit-24h-low").textContent = `₩${formatNumber(
+      data[0].lowPrice
+    )}`;
+    document.getElementById("upbit-24h-volume").textContent = `${formatNumber(
+      data[0].tradeVolume,
+      1
+    )} BTC`;
+    return parseFloat(data[0].tradePrice);
+  } else {
     document.getElementById("upbit-price").textContent = "일시적 오류";
     return null;
   }
@@ -192,7 +189,7 @@ function updateSatoshiValue(binancePrice, upbitPrice) {
 async function fetchMiningData() {
   try {
     // 총 채굴된 비트코인 조회
-    const totalMinedResponse = await fetch(BLOCKCHAIN_INFO_API + "totalbc");
+    const totalMinedResponse = await fetch(BLOCKCHAIN_INFO_API);
 
     if (!totalMinedResponse.ok) {
       throw new Error("Blockchain API 응답 오류");

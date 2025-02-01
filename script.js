@@ -58,9 +58,15 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             // 업비트 데이터 처리
             let upbitPrice = null;
-            if (upbitResponse.status === 'fulfilled' && upbitResponse.value.ok) {
-                const upbitData = await upbitResponse.value.json();
-                upbitPrice = upbitData[0].trade_price;
+            if (upbitResponse.status === 'fulfilled') {
+                if (upbitResponse.value.ok) {
+                    const upbitData = await upbitResponse.value.json();
+                    upbitPrice = upbitData[0].trade_price;
+                } else {
+                    const errorText = await upbitResponse.value.text();
+                    console.error('Upbit API error:', upbitResponse.value.status, errorText);
+                    elements.upbitPrice.textContent = '로딩 실패';
+                }
             } else {
                 console.error('Upbit API failed:', upbitResponse.reason);
                 elements.upbitPrice.textContent = '로딩 실패';
@@ -68,9 +74,15 @@ document.addEventListener('DOMContentLoaded', async function() {
 
             // 바이낸스 데이터 처리
             let binancePrice = null;
-            if (binanceResponse.status === 'fulfilled' && binanceResponse.value.ok) {
-                const binanceData = await binanceResponse.value.json();
-                binancePrice = parseFloat(binanceData.lastPrice);
+            if (binanceResponse.status === 'fulfilled') {
+                if (binanceResponse.value.ok) {
+                    const binanceData = await binanceResponse.value.json();
+                    binancePrice = parseFloat(binanceData.lastPrice);
+                } else {
+                    const errorText = await binanceResponse.value.text();
+                    console.error('Binance API error:', binanceResponse.value.status, errorText);
+                    elements.binancePrice.textContent = '로딩 실패';
+                }
             } else {
                 console.error('Binance API failed:', binanceResponse.reason);
                 elements.binancePrice.textContent = '로딩 실패';
@@ -86,7 +98,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             updatePriceWithAnimation(elements.binancePrice, binancePrice, previousPrices.binance);
 
             // 브라우저 탭 타이틀 업데이트
-            document.title = `$${binancePrice.toLocaleString()} / ₩${upbitPrice.toLocaleString()}`;
+            document.title = `\$${binancePrice.toLocaleString()} / ₩${upbitPrice.toLocaleString()}`;
 
             // 이전 가격 업데이트
             previousPrices.upbit = upbitPrice;

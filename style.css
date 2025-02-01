@@ -45,6 +45,24 @@ body {
     font-weight: 600;
 }
 
+@media (max-width: 480px) {
+    .header-content {
+        padding: 10px 15px;
+    }
+
+    .logo i {
+        font-size: 1.4em;
+    }
+
+    .logo h1 {
+        font-size: 1.2em;
+    }
+
+    .developer-link {
+        font-size: 0.8em;
+    }
+}
+
 header {
     margin-bottom: 20px;
 }

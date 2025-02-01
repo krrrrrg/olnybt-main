@@ -1,29 +1,43 @@
 // API 엔드포인트
 const BINANCE_API = "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT";
 const UPBIT_API = "https://api.upbit.com/v1/ticker?markets=KRW-BTC";
-const EXCHANGE_RATE_API =
-  "https://quotation-api-cdn.dunamu.com/v1/forex/recent?codes=FRX.KRWUSD";
+const EXCHANGE_RATE_API = "https://api.exchangerate-api.com/v4/latest/USD";
 const FEAR_GREED_API = "https://api.alternative.me/fng/";
 
-// CORS 프록시 URL (여러 옵션 제공)
-const CORS_PROXIES = [
-  "https://cors-anywhere.herokuapp.com/",
+// 프록시 서버 설정
+const PROXY_URLS = [
+  "https://cors.bridged.cc/",
   "https://api.allorigins.win/raw?url=",
   "https://corsproxy.io/?",
 ];
 
-// 현재 사용할 프록시 인덱스
 let currentProxyIndex = 0;
 
-// 프록시 URL 가져오기 함수
+// 프록시 URL 순환
 function getNextProxy() {
-  const proxy = CORS_PROXIES[currentProxyIndex];
-  currentProxyIndex = (currentProxyIndex + 1) % CORS_PROXIES.length;
+  const proxy = PROXY_URLS[currentProxyIndex];
+  currentProxyIndex = (currentProxyIndex + 1) % PROXY_URLS.length;
   return proxy;
 }
 
-// 데이터 업데이트 간격 (밀리초)
-const UPDATE_INTERVAL = 10000;
+// API 호출 함수
+async function fetchWithRetry(url, options = {}, retries = 3) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      const proxy = getNextProxy();
+      const response = await fetch(proxy + encodeURIComponent(url), options);
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+      return await response.json();
+    } catch (error) {
+      if (i === retries - 1) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 1000 * (i + 1)));
+    }
+  }
+}
+
+// 데이터 업데이트 간격 조정
+const UPDATE_INTERVAL = 15000;
 
 // 숫자 포맷팅 함수
 const formatNumber = (number, decimals = 2) => {
@@ -36,22 +50,7 @@ const formatNumber = (number, decimals = 2) => {
 // Binance 데이터 가져오기
 async function fetchBinanceData() {
   try {
-    const response = await fetch(
-      "https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT",
-      {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-        },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-
+    const data = await fetchWithRetry(BINANCE_API);
     if (data && data.lastPrice) {
       document.getElementById("binance-price").textContent = `$${formatNumber(
         data.lastPrice
@@ -65,12 +64,12 @@ async function fetchBinanceData() {
       document.getElementById(
         "binance-24h-volume"
       ).textContent = `${formatNumber(data.volume, 1)} BTC`;
-
       return parseFloat(data.lastPrice);
     }
     return null;
   } catch (error) {
     console.error("Binance 데이터 조회 실패:", error);
+    document.getElementById("binance-price").textContent = "일시적 오류";
     return null;
   }
 }
@@ -78,42 +77,28 @@ async function fetchBinanceData() {
 // Upbit 데이터 가져오기
 async function fetchUpbitData() {
   try {
-    const response = await fetch(
-      "https://api.upbit.com/v1/ticker?markets=KRW-BTC",
-      {
-        method: "GET",
-        headers: {
-          Accept: "application/json",
-        },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const [data] = await response.json();
-
-    if (data && data.trade_price) {
+    const data = await fetchWithRetry(UPBIT_API);
+    if (data && data[0]) {
+      const ticker = data[0];
       document.getElementById("upbit-price").textContent = `₩${formatNumber(
-        data.trade_price
+        ticker.trade_price
       )}`;
       document.getElementById("upbit-24h-high").textContent = `₩${formatNumber(
-        data.high_price
+        ticker.high_price
       )}`;
       document.getElementById("upbit-24h-low").textContent = `₩${formatNumber(
-        data.low_price
+        ticker.low_price
       )}`;
       document.getElementById("upbit-24h-volume").textContent = `${formatNumber(
-        data.acc_trade_volume_24h,
+        ticker.acc_trade_volume_24h,
         1
       )} BTC`;
-
-      return parseFloat(data.trade_price);
+      return parseFloat(ticker.trade_price);
     }
     return null;
   } catch (error) {
     console.error("Upbit 데이터 조회 실패:", error);
+    document.getElementById("upbit-price").textContent = "일시적 오류";
     return null;
   }
 }
@@ -121,23 +106,18 @@ async function fetchUpbitData() {
 // 환율 데이터 가져오기
 async function fetchExchangeRate() {
   try {
-    const response = await fetch(
-      "https://quotation-api-cdn.dunamu.com/v1/forex/recent?codes=FRX.KRWUSD"
-    );
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    const data = await fetchWithRetry(EXCHANGE_RATE_API);
+    if (data && data.rates && data.rates.KRW) {
+      const rate = data.rates.KRW;
+      document.getElementById("exchange-rate").textContent = `${formatNumber(
+        rate
+      )}`;
+      return rate;
     }
-
-    const [data] = await response.json();
-    const rate = data.basePrice;
-
-    document.getElementById("exchange-rate").textContent = `${formatNumber(
-      rate
-    )}`;
-    return rate;
+    return null;
   } catch (error) {
     console.error("환율 데이터 조회 실패:", error);
+    document.getElementById("exchange-rate").textContent = "일시적 오류";
     return null;
   }
 }
@@ -200,17 +180,28 @@ function updateSatoshiValue(binancePrice, exchangeRate) {
   )}`;
 }
 
-// 모든 데이터 업데이트
+// 데이터 업데이트 함수 수정
 async function updateAllData() {
-  const [binancePrice, upbitPrice, exchangeRate] = await Promise.all([
-    fetchBinanceData(),
-    fetchUpbitData(),
-    fetchExchangeRate(),
-  ]);
+  try {
+    const [binancePrice, upbitPrice, exchangeRate] = await Promise.all([
+      fetchBinanceData().catch(() => null),
+      fetchUpbitData().catch(() => null),
+      fetchExchangeRate().catch(() => null),
+    ]);
 
-  calculateKimchiPremium(upbitPrice, binancePrice, exchangeRate);
-  updateSatoshiValue(binancePrice, exchangeRate);
-  fetchFearGreedIndex();
+    if (binancePrice && upbitPrice && exchangeRate) {
+      calculateKimchiPremium(upbitPrice, binancePrice, exchangeRate);
+      updateSatoshiValue(binancePrice, exchangeRate);
+    }
+
+    // 공포/탐욕 지수는 덜 자주 업데이트
+    if (Math.random() < 0.2) {
+      // 20% 확률로 업데이트
+      fetchFearGreedIndex().catch(console.error);
+    }
+  } catch (error) {
+    console.error("데이터 업데이트 실패:", error);
+  }
 }
 
 // TradingView 위젯 오류 핸들링

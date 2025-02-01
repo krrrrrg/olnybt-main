@@ -18,7 +18,19 @@
     Access-Control-Allow-Headers = "Origin, X-Requested-With, Content-Type, Accept"
 
 [[redirects]]
-  from = "/api/*"
+  from = "/api/binance/*"
   to = "https://api.binance.com/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/upbit/*"
+  to = "https://api.upbit.com/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/exchange/*"
+  to = "https://api.exchangerate-api.com/:splat"
   status = 200
   force = true 

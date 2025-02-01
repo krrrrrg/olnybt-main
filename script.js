@@ -135,7 +135,23 @@ document.addEventListener('DOMContentLoaded', async function() {
                 }
 
                 const data = await response.json();
-                const result = data.contents ? JSON.parse(data.contents) : data;
+                let result;
+                try {
+                    // allorigins.win의 응답인 경우
+                    if (data.contents) {
+                        if (typeof data.contents === 'string' && data.contents.startsWith('{')) {
+                            result = JSON.parse(data.contents);
+                        } else {
+                            result = data.contents;
+                        }
+                    } else {
+                        result = data;
+                    }
+                } catch (parseError) {
+                    console.error('JSON 파싱 오류:', parseError);
+                    result = data;
+                }
+                
                 if (cacheKey) cacheManager.set(cacheKey, result);
                 return result;
             } catch (error) {
@@ -214,14 +230,16 @@ document.addEventListener('DOMContentLoaded', async function() {
             const binanceData = binanceDataRaw;
             const fearGreed = fearGreedRaw;
             const exchangeRate = exchangeRateRaw;
-            const totalBtc = parseInt(totalBtcRaw);
+            // totalBtc가 문자열인 경우 처리
+            const totalBtc = typeof totalBtcRaw === 'string' ? parseInt(totalBtcRaw) : totalBtcRaw;
 
             console.log('Parsed data:', {
                 upbitData,
                 binanceData,
                 fearGreed,
                 exchangeRate,
-                totalBtc
+                totalBtc,
+                totalBtcRaw
             });
 
             // 안전한 값 추출

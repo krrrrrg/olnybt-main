@@ -135,25 +135,8 @@ document.addEventListener('DOMContentLoaded', async function() {
                 }
 
                 const data = await response.json();
-                let result;
-                try {
-                    // allorigins.win의 응답인 경우
-                    if (data.contents) {
-                        if (typeof data.contents === 'string' && data.contents.startsWith('{')) {
-                            result = JSON.parse(data.contents);
-                        } else {
-                            result = data.contents;
-                        }
-                    } else {
-                        result = data;
-                    }
-                } catch (parseError) {
-                    console.error('JSON 파싱 오류:', parseError);
-                    result = data;
-                }
-                
-                if (cacheKey) cacheManager.set(cacheKey, result);
-                return result;
+                if (cacheKey) cacheManager.set(cacheKey, data);
+                return data;
             } catch (error) {
                 lastError = error;
                 console.warn(`Retry ${i + 1}/${retries} failed for ${url}:`, error);
@@ -186,29 +169,29 @@ document.addEventListener('DOMContentLoaded', async function() {
                 exchangeRateRaw,
                 totalBtcRaw
             ] = await Promise.all([
-                fetchWithRetry('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://api.upbit.com/v1/ticker?markets=KRW-BTC'), {
+                fetchWithRetry('https://corsproxy.io/?https://api.upbit.com/v1/ticker?markets=KRW-BTC', {
                     retries: 3,
                     delay: 1000,
                     timeout: 5000
                 }),
-                fetchWithRetry('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT'), {
+                fetchWithRetry('https://corsproxy.io/?https://api.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT', {
                     retries: 3,
                     delay: 1000,
                     timeout: 5000
                 }),
-                fetchWithRetry('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://api.alternative.me/fng/?limit=1'), {
+                fetchWithRetry('https://corsproxy.io/?https://api.alternative.me/fng/?limit=1', {
                     retries: 2,
                     delay: 2000,
                     cacheKey: 'fearGreed',
                     timeout: 8000
                 }),
-                fetchWithRetry('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://open.er-api.com/v6/latest/USD'), {
+                fetchWithRetry('https://corsproxy.io/?https://open.er-api.com/v6/latest/USD', {
                     retries: 2,
                     delay: 2000,
                     cacheKey: 'exchangeRate',
                     timeout: 8000
                 }),
-                fetchWithRetry('https://api.allorigins.win/raw?url=' + encodeURIComponent('https://blockchain.info/q/totalbc'), {
+                fetchWithRetry('https://corsproxy.io/?https://blockchain.info/q/totalbc', {
                     retries: 2,
                     delay: 2000,
                     cacheKey: 'totalBtc',

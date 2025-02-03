@@ -582,8 +582,12 @@ body {
   background: #1e222d;
   border-radius: 8px;
   padding: 20px;
-  height: 600px;
+  height: 800px;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.chart:first-child {
+  height: 600px;
 }
 
 .chart h2 {
@@ -953,7 +957,8 @@ body.light-mode .fear-greed-meter img {
     padding: 0 10px;
   }
 
-  .chart {
+  .chart,
+  .chart:first-child {
     height: 400px;
     padding: 15px;
   }

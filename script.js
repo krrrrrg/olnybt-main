@@ -372,9 +372,50 @@ window.addEventListener(
   true
 );
 
-// DOMContentLoaded 이벤트 리스너 내부
-document.addEventListener("DOMContentLoaded", () => {
+// 업비트 초기 가격 조회 함수 추가
+async function getInitialUpbitPrice() {
+  try {
+    const response = await fetch(
+      "https://api.upbit.com/v1/ticker?markets=KRW-BTC"
+    );
+    const [data] = await response.json();
+    if (data?.trade_price) {
+      const price = data.trade_price;
+      document.getElementById("upbit-price").textContent = `₩${formatNumber(
+        price
+      )}`;
+      document.getElementById("upbit-24h-high").textContent = `₩${formatNumber(
+        data.high_price
+      )}`;
+      document.getElementById("upbit-24h-low").textContent = `₩${formatNumber(
+        data.low_price
+      )}`;
+      document.getElementById("upbit-24h-volume").textContent = `${formatNumber(
+        data.acc_trade_volume_24h,
+        1
+      )} BTC`;
+
+      window.upbitPrice = price;
+      // 초기 김치프리미엄 계산
+      calculateKimchiPremium(
+        window.upbitPrice,
+        window.binancePrice,
+        window.exchangeRate
+      );
+      return price;
+    }
+  } catch (error) {
+    console.error("업비트 초기 가격 조회 실패:", error);
+  }
+  return null;
+}
+
+// DOMContentLoaded 이벤트 리스너 수정
+document.addEventListener("DOMContentLoaded", async () => {
   console.log("데이터 로딩 시작...");
+
+  // 초기 업비트 가격 조회
+  await getInitialUpbitPrice();
 
   // Upbit 웹소켓 연결
   const upbitWs = setupUpbitWebSocket();

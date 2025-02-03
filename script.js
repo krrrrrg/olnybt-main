@@ -1,7 +1,8 @@
 // API 엔드포인트 정리
 const ENDPOINTS = {
   BINANCE: "https://api1.binance.com/api/v3/ticker/24hr?symbol=BTCUSDT",
-  EXCHANGE_RATE: "https://api.exchangerate-api.com/v4/latest/USD",
+  EXCHANGE_RATE:
+    "https://query1.finance.yahoo.com/v8/finance/chart/KRW=X?interval=1m&range=1d",
   FEAR_GREED: "https://api.alternative.me/fng/",
   BLOCKCHAIN: "https://mempool.space/api/blocks/tip/height",
   UPBIT_WS: "wss://api.upbit.com/websocket/v1",
@@ -12,7 +13,7 @@ const CORS_PROXY = "https://corsproxy.io/?";
 const PROXY_API_KEY = "temp_d89c2c8b46d96b86aa0c11ddd3dd"; // 임시 키, 나중에 변경 필요
 
 // 불필요한 프록시 관련 코드 제거
-const UPDATE_INTERVAL = 15000;
+const UPDATE_INTERVAL = 10000;
 
 // 바이낸스 API용 프록시
 const BINANCE_PROXY = "https://api.allorigins.win/raw?url=";
@@ -165,17 +166,18 @@ function setupUpbitWebSocket() {
 // 환율 데이터 가져오기
 async function fetchExchangeRate() {
   try {
-    const response = await fetch(ENDPOINTS.EXCHANGE_RATE);
+    const response = await fetch(CORS_PROXY + ENDPOINTS.EXCHANGE_RATE);
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
     const data = await response.json();
-    if (data?.rates?.KRW) {
-      const rate = data.rates.KRW;
+    if (data?.chart?.result?.[0]?.meta?.regularMarketPrice) {
+      const rate = data.chart.result[0].meta.regularMarketPrice;
       document.getElementById("exchange-rate").textContent = `₩${formatNumber(
         rate
       )}`;
       window.exchangeRate = rate;
-      // 환율 업데이트 시에도 김치프리미엄 재계산
+
+      // 환율 업데이트 시 김치프리미엄 재계산
       calculateKimchiPremium(
         window.upbitPrice,
         window.binancePrice,
@@ -183,12 +185,12 @@ async function fetchExchangeRate() {
       );
       return rate;
     }
+    throw new Error("Invalid exchange rate data");
   } catch (error) {
     console.error("환율 데이터 조회 실패:", error);
+    document.getElementById("exchange-rate").textContent = "일시적 오류";
+    return null;
   }
-
-  document.getElementById("exchange-rate").textContent = "일시적 오류";
-  return null;
 }
 
 // 공포/탐욕 지수 가져오기

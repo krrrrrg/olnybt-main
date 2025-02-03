@@ -571,13 +571,25 @@ body {
 
 /* Chart Container */
 .chart-container {
-  position: relative;
-  width: 100%;
-  height: 600px;
-  margin: 20px 0;
-  border-radius: 8px;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin: 20px 0 40px 0;
+  padding: 0 20px;
+}
+
+.chart {
   background: #1e222d;
+  border-radius: 8px;
+  padding: 20px;
+  height: 500px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.chart h2 {
+  margin-bottom: 15px;
+  color: #e2e8f0;
+  font-size: 1.2em;
 }
 
 .tradingview-widget-container {
@@ -933,4 +945,16 @@ body.light-mode .fear-greed-meter img {
 /* 기본적으로 스와이프 힌트 숨기기 (PC) */
 .swipe-hint {
   display: none;
+}
+
+@media (max-width: 768px) {
+  .chart-container {
+    margin: 15px 0 30px 0;
+    padding: 0 10px;
+  }
+
+  .chart {
+    height: 400px;
+    padding: 15px;
+  }
 }

@@ -202,6 +202,37 @@
             </div>
             <!-- TradingView Widget END -->
           </section>
+
+          <section class="chart">
+            <h2>비트코인 도미넌스</h2>
+            <!-- TradingView 도미넌스 차트 위젯 -->
+            <div class="tradingview-widget-container">
+              <div id="tradingview_dominance"></div>
+              <script type="text/javascript">
+                new TradingView.widget({
+                  width: "100%",
+                  height: "100%",
+                  symbol: "CRYPTOCAP:BTC.D",
+                  interval: "D",
+                  timezone: "Asia/Seoul",
+                  theme: "dark",
+                  style: "1",
+                  locale: "kr",
+                  toolbar_bg: "#f1f3f6",
+                  enable_publishing: false,
+                  hide_side_toolbar: false,
+                  allow_symbol_change: true,
+                  container_id: "tradingview_dominance",
+                  show_popup_button: false,
+                  popup_width: "1000",
+                  popup_height: "650",
+                  hide_volume: false,
+                  backgroundColor: "#1e222d",
+                  gridColor: "#2a2e39",
+                });
+              </script>
+            </div>
+          </section>
         </div>
       </main>
     </div>

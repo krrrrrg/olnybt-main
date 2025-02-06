@@ -5,15 +5,29 @@ const ENDPOINTS = {
     "https://query1.finance.yahoo.com/v8/finance/chart/KRW=X?interval=1m&range=1d",
   FEAR_GREED: "https://api.alternative.me/fng/",
   BLOCKCHAIN: "https://mempool.space/api/blocks/tip/height",
+  BINANCE_WS: 'wss://stream.binance.com/stream?streams=btcusdt@miniTicker',
   UPBIT_WS: "wss://api.upbit.com/websocket/v1",
+  MEMPOOL_WS: 'wss://mempool.space/api/v1/ws',
+  ETH_RPC: 'https://rpc.ankr.com/eth',
 };
+
+const promises = {
+  binancePromise: null,
+  upbitPromise: null,
+}
+
+// https://data.chain.link/feeds/ethereum/mainnet/krw-usd
+const CHAINLINK_KRW_FEED = '0x01435677FB11763550905594A16B645847C1d0F3';
+
+// 비트코인 전송당 바이트 (세그윗 기준)
+const VBYTES_PER_TX = 144;
 
 // CORS 프록시 설정
 const CORS_PROXY = "https://corsproxy.io/?";
 const PROXY_API_KEY = "temp_d89c2c8b46d96b86aa0c11ddd3dd"; // 임시 키, 나중에 변경 필요
 
 // 불필요한 프록시 관련 코드 제거
-const UPDATE_INTERVAL = 10000;
+const UPDATE_INTERVAL = 300000;
 
 // 바이낸스 API용 프록시
 const BINANCE_PROXY = "https://api.allorigins.win/raw?url=";
@@ -72,20 +86,28 @@ async function fetchBinanceData() {
     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
     const data = await response.json();
-    if (data?.lastPrice) {
-      const price = parseFloat(data.lastPrice);
+
+    const {
+      lastPrice,
+      highPrice,
+      lowPrice,
+      volume,
+    } = data || {};
+
+    if (lastPrice) {
+      const price = parseFloat(lastPrice);
       document.getElementById("binance-price").textContent = `$${formatNumber(
         price
       )}`;
       document.getElementById(
         "binance-24h-high"
-      ).textContent = `$${formatNumber(data.highPrice)}`;
+      ).textContent = `$${formatNumber(highPrice)}`;
       document.getElementById("binance-24h-low").textContent = `$${formatNumber(
-        data.lowPrice
+        lowPrice
       )}`;
       document.getElementById(
         "binance-24h-volume"
-      ).textContent = `${formatNumber(data.volume, 1)} BTC`;
+      ).textContent = `${formatNumber(volume, 1)} BTC`;
 
       // 전역 변수에 저장
       window.binancePrice = price;
@@ -101,6 +123,77 @@ async function fetchBinanceData() {
   return null;
 }
 
+// 바이낸스 웹소캣 연결
+function setupBinanceWebSocket() {
+  const ws = new WebSocket(ENDPOINTS.BINANCE_WS);
+
+  ws.onopen = () => {
+    console.log('Binance 웹소켓과 연결됨');
+  };
+
+  ws.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data)?.data;
+
+      if (!data?.c) {
+        return;
+      }
+
+      const {
+        c: lastPrice,
+        h: highPrice,
+        l: lowPrice,
+        v: volume,
+      } = data;
+
+      const price = parseFloat(lastPrice);
+      document.getElementById("binance-price").textContent = `$${formatNumber(
+        price
+      )}`;
+      document.getElementById(
+        "binance-24h-high"
+      ).textContent = `$${formatNumber(highPrice)}`;
+      document.getElementById("binance-24h-low").textContent = `$${formatNumber(
+        lowPrice
+      )}`;
+      document.getElementById(
+        "binance-24h-volume"
+      ).textContent = `${formatNumber(volume, 1)} BTC`;
+        
+      const satoshiUSD = price / 100000000;
+      document.getElementById("satoshi-usd").textContent = `$${formatNumber(
+        satoshiUSD,
+        6
+      )}`;
+        
+      // 전역 변수에 저장
+      window.binancePrice = price;
+      // 타이틀 업데이트
+      updatePageTitle(window.binancePrice, window.upbitPrice);
+
+      if (typeof promises.binancePromise == 'function') {
+        promises.binancePromise(price);
+
+        promises.binancePromise = null;
+      }
+
+      return price;
+
+    } catch (error) {
+      console.error("Binance 웹소켓 데이터 처리 실패:", error);
+    }
+  }
+
+  ws.onerror = (error) => {
+    console.error("Binance 웹소켓 에러:", error);
+  };
+
+  ws.onclose = () => {
+    console.log("Binance 웹소켓 연결 종료");
+    setTimeout(setupBinanceWebSocket, 3000);
+  };
+}
+
 // Upbit 웹소켓 설정 수정
 function setupUpbitWebSocket() {
   const ws = new WebSocket(ENDPOINTS.UPBIT_WS);
@@ -113,6 +206,7 @@ function setupUpbitWebSocket() {
       { type: "ticker", codes: ["KRW-BTC"] },
     ]);
     ws.send(message);
+    console.log('Upbit 웹소켓과 연결됨');
   };
 
   ws.onmessage = (event) => {
@@ -120,32 +214,55 @@ function setupUpbitWebSocket() {
       const enc = new TextDecoder("utf-8");
       const data = JSON.parse(enc.decode(event.data));
 
-      if (data?.trade_price) {
-        const price = data.trade_price;
-        document.getElementById("upbit-price").textContent = `₩${formatNumber(
-          price
-        )}`;
-        document.getElementById(
-          "upbit-24h-high"
-        ).textContent = `₩${formatNumber(data.high_price)}`;
-        document.getElementById("upbit-24h-low").textContent = `₩${formatNumber(
-          data.low_price
-        )}`;
-        document.getElementById(
-          "upbit-24h-volume"
-        ).textContent = `${formatNumber(data.acc_trade_volume_24h, 1)} BTC`;
-
-        // 전역 변수에 저장
-        window.upbitPrice = price;
-        // 타이틀 업데이트
-        updatePageTitle(window.binancePrice, window.upbitPrice);
-        // 김치프리미엄 계산 추가
-        calculateKimchiPremium(
-          window.upbitPrice,
-          window.binancePrice,
-          window.exchangeRate
-        );
+      if (!data?.trade_price) {
+        return;
       }
+
+      const {
+        trade_price,
+        high_price,
+        low_price,
+        acc_trade_volume_24h,
+      } = data;
+
+      document.getElementById("upbit-price").textContent = `₩${formatNumber(
+        trade_price
+      )}`;
+      document.getElementById("upbit-24h-high").textContent = `₩${formatNumber(
+        high_price
+      )}`;
+      document.getElementById("upbit-24h-low").textContent = `₩${formatNumber(
+        low_price
+      )}`;
+      document.getElementById("upbit-24h-volume").textContent = `${formatNumber(
+        acc_trade_volume_24h,
+        1
+      )} BTC`;
+
+      const satoshiKRW = trade_price / 100000000;
+      document.getElementById("satoshi-krw").textContent = `₩${formatNumber(
+        satoshiKRW,
+        2
+      )}`;
+
+      // 전역 변수에 저장
+      window.upbitPrice = trade_price;
+      window.upbitSat = satoshiKRW;
+      // 타이틀 업데이트
+      updatePageTitle(window.binancePrice, window.upbitPrice);
+
+      if (typeof promises.upbitPromise == 'function') {
+        promises.upbitPromise(trade_price);
+
+        promises.upbitPromise = null;
+      }
+
+      // 김치프리미엄 계산 추가
+      calculateKimchiPremium(
+        window.upbitPrice,
+        window.binancePrice,
+        window.exchangeRate
+      );
     } catch (error) {
       console.error("Upbit 웹소켓 데이터 처리 실패:", error);
     }
@@ -161,6 +278,136 @@ function setupUpbitWebSocket() {
   };
 
   return ws;
+}
+
+// 실시간 비트코인 블록 / 수수료 / 채굴 데이터 수집
+function setupMempoolWebSocket() {
+  const ws = new WebSocket(ENDPOINTS.MEMPOOL_WS);
+
+  ws.onopen = () => {
+    ws.send(JSON.stringify({
+      "action": "want",
+      "data": ["stats"]
+    }));
+    console.log('Mempool 웹소켓과 연결됨');
+  };
+
+  ws.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+
+      if (!data?.da?.nextRetargetHeight) {
+        return;
+      }
+
+      const {
+        da: {
+          nextRetargetHeight,
+          remainingBlocks,
+        },
+        fees: {
+          fastestFee,
+        },
+      } = data;
+
+      const blockHeight = nextRetargetHeight - remainingBlocks;
+      const halvings = Math.floor(blockHeight / 210000);
+      let totalMinedBTC = 0;
+      let count = 0;
+      let coins = 50;
+      
+      while (halvings >= count) {
+        const blocks = halvings > count
+          ? 210000
+          : blockHeight % 210000;
+
+        totalMinedBTC += coins * blocks;
+        coins = coins / 2;
+        count++;
+      }
+      coins = coins * 2;
+
+      const issuancePerYear = 210000 * coins / 4;
+      const currentInflation = issuancePerYear * 100 / totalMinedBTC;
+      const remainingBTC = 21000000 - totalMinedBTC;
+      
+      document.getElementById("btc-height").textContent = `${formatNumber(
+        blockHeight,
+        0
+      )}`;
+      document.getElementById("btc-fees").textContent = `${fastestFee} sat/vB ${window.upbitSat ? `
+        ( ₩${formatNumber(fastestFee * VBYTES_PER_TX * window.upbitSat, 0)} )
+      ` : ''}`;
+      document.getElementById("btc-mined").textContent = `${formatNumber(
+        totalMinedBTC,
+        0
+      )} BTC`;
+      document.getElementById("btc-remaining").textContent = `${formatNumber(
+        remainingBTC,
+        0
+      )} BTC`;
+      document.getElementById("btc-inflation").textContent = `${formatNumber(
+        currentInflation,
+        2
+      )}% ( ${formatNumber(coins, 2)} BTC )`;
+    } catch (error) {
+      console.error("Mempool 웹소켓 데이터 처리 실패:", error);
+    }
+  };
+
+  ws.onerror = (error) => {
+    console.error("Mempool 웹소켓 에러:", error);
+  };
+
+  ws.onclose = () => {
+    console.log("Mempool 웹소켓 연결 종료");
+    setTimeout(setupMempoolWebSocket, 3000);
+  };
+
+  return ws;
+}
+
+const FeedABI = [{"inputs":[],"name":"latestAnswer","outputs":[{"internalType":"int256","name":"","type":"int256"}],"stateMutability":"view","type":"function"}];
+
+// 체인링크 온체인 환율 (0.15% 마다 업데이트)
+async function fetchChainlinkKRW() {
+  try {
+    const staticNetwork = new ethers.Network('eth', 1);
+
+    const provider = new ethers.JsonRpcProvider(ENDPOINTS.ETH_RPC, staticNetwork, {
+      staticNetwork
+    });
+
+    const krwDataFeed = new ethers.BaseContract(CHAINLINK_KRW_FEED, FeedABI, provider);
+
+    const answer = await krwDataFeed.latestAnswer();
+
+    if (!answer) {
+      throw new Error('Invalid feed data');
+    }
+
+    const rate = 10 ** 8 / Number(answer);
+
+    document.getElementById("exchange-rate").textContent = `₩${formatNumber(
+      rate
+    )}`;
+    window.exchangeRate = rate;
+
+    // 환율 업데이트 시 김치프리미엄 재계산
+    calculateKimchiPremium(
+      window.upbitPrice,
+      window.binancePrice,
+      window.exchangeRate
+    );
+
+    return rate;
+  } catch (error) {
+    console.error("환율 데이터 조회 실패:", error);
+    if (!window.exchangeRate) {
+      document.getElementById("exchange-rate").textContent = "일시적 오류";
+    }
+    return null;
+  }
 }
 
 // 환율 데이터 가져오기
@@ -274,30 +521,19 @@ async function fetchMiningData() {
     if (!response.ok) throw new Error("Blockchain API 응답 오류");
 
     const blockHeight = parseInt(await response.text());
+    const halvings = Math.floor(blockHeight / 210000);
     let totalMinedBTC = 0;
+    let count = 0;
+    let coins = 50;
 
-    // 첫 번째 구간 (1-210000 블록): 50 BTC
-    if (blockHeight <= 210000) {
-      totalMinedBTC = blockHeight * 50;
-    } else {
-      totalMinedBTC = 210000 * 50; // 첫 번째 구간 전체
+    while (halvings >= count) {
+      const blocks = halvings > count
+        ? 210000
+        : blockHeight % 210000;
 
-      // 두 번째 구간 (210001-420000 블록): 25 BTC
-      if (blockHeight <= 420000) {
-        totalMinedBTC += (blockHeight - 210000) * 25;
-      } else {
-        totalMinedBTC += 210000 * 25; // 두 번째 구간 전체
-
-        // 세 번째 구간 (420001-630000 블록): 12.5 BTC
-        if (blockHeight <= 630000) {
-          totalMinedBTC += (blockHeight - 420000) * 12.5;
-        } else {
-          totalMinedBTC += 210000 * 12.5; // 세 번째 구간 전체
-
-          // 네 번째 구간 (630001- 블록): 6.25 BTC
-          totalMinedBTC += (blockHeight - 630000) * 6.25;
-        }
-      }
+      totalMinedBTC += coins * blocks;
+      coins = coins / 2;
+      count++;
     }
 
     const remainingBTC = 21000000 - totalMinedBTC;
@@ -320,6 +556,7 @@ async function fetchMiningData() {
 // 데이터 업데이트 함수 수정
 async function updateAllData() {
   try {
+    /**
     const [binancePrice, exchangeRate] = await Promise.all([
       fetchBinanceData().catch(() => null),
       fetchExchangeRate().catch(() => null),
@@ -330,7 +567,7 @@ async function updateAllData() {
     window.exchangeRate = exchangeRate;
 
     // 사토시 가치 업데이트 (upbitPrice는 웹소켓에서 업데이트)
-    updateSatoshiValue(binancePrice, window.upbitPrice);
+    updateSatoshiValue(window.binancePrice, window.upbitPrice);
 
     // 김치프리미엄은 웹소켓에서 계산됨
 
@@ -351,6 +588,11 @@ async function updateAllData() {
       await fetchFearGreedIndex();
       window.lastFearGreedUpdate = Date.now();
     }
+    **/
+    await Promise.all([
+      fetchChainlinkKRW(),
+      fetchFearGreedIndex(),
+    ]);
   } catch (error) {
     console.error("데이터 업데이트 실패:", error);
   }
@@ -415,10 +657,18 @@ document.addEventListener("DOMContentLoaded", async () => {
   console.log("데이터 로딩 시작...");
 
   // 초기 업비트 가격 조회
-  await getInitialUpbitPrice();
+  // await getInitialUpbitPrice();
+
+  const upbitPromise = new Promise((resolve) => promises.upbitPromise = resolve);
+  const binancePromise = new Promise((resolve) => promises.binancePromise = resolve);
 
   // Upbit 웹소켓 연결
   const upbitWs = setupUpbitWebSocket();
+  const bnbWs = setupBinanceWebSocket();
+
+  await Promise.all([upbitPromise, binancePromise]);
+
+  const mempoolWs = setupMempoolWebSocket();
 
   // 다른 데이터 업데이트
   updateAllData();
@@ -427,5 +677,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // 페이지 언로드 시 웹소켓 연결 종료
   window.addEventListener("beforeunload", () => {
     upbitWs.close();
+    bnbWs.close();
+    mempoolWs.close();
   });
 });

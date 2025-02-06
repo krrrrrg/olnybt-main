@@ -657,7 +657,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   console.log("데이터 로딩 시작...");
 
   // 초기 업비트 가격 조회
-  // await getInitialUpbitPrice();
+  getInitialUpbitPrice();
 
   const upbitPromise = new Promise((resolve) => promises.upbitPromise = resolve);
   const binancePromise = new Promise((resolve) => promises.binancePromise = resolve);

@@ -32,11 +32,11 @@ const UPDATE_INTERVAL = 300000;
 // 바이낸스 API용 프록시
 const BINANCE_PROXY = "https://api.allorigins.win/raw?url=";
 
-// 숫자 포맷팅 함수
-const formatNumber = (number, decimals = 2) => {
+// 숫자 포맷팅 함수 수정
+const formatNumber = (number, decimals = 2, isKRW = false) => {
   return Number(number).toLocaleString("ko-KR", {
-    maximumFractionDigits: decimals,
-    minimumFractionDigits: decimals,
+    maximumFractionDigits: isKRW ? 0 : decimals,
+    minimumFractionDigits: isKRW ? 0 : decimals,
   });
 };
 
@@ -210,13 +210,16 @@ function setupUpbitWebSocket() {
       const { trade_price, high_price, low_price, acc_trade_volume_24h } = data;
 
       document.getElementById("upbit-price").textContent = `₩${formatNumber(
-        trade_price
+        trade_price,
+        0
       )}`;
       document.getElementById("upbit-24h-high").textContent = `₩${formatNumber(
-        high_price
+        high_price,
+        0
       )}`;
       document.getElementById("upbit-24h-low").textContent = `₩${formatNumber(
-        low_price
+        low_price,
+        0
       )}`;
       document.getElementById("upbit-24h-volume").textContent = `${formatNumber(
         acc_trade_volume_24h,
@@ -618,13 +621,16 @@ async function getInitialUpbitPrice() {
     if (data?.trade_price) {
       const price = data.trade_price;
       document.getElementById("upbit-price").textContent = `₩${formatNumber(
-        price
+        price,
+        0
       )}`;
       document.getElementById("upbit-24h-high").textContent = `₩${formatNumber(
-        data.high_price
+        data.high_price,
+        0
       )}`;
       document.getElementById("upbit-24h-low").textContent = `₩${formatNumber(
-        data.low_price
+        data.low_price,
+        0
       )}`;
       document.getElementById("upbit-24h-volume").textContent = `${formatNumber(
         data.acc_trade_volume_24h,

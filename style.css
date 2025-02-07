@@ -47,6 +47,7 @@ body {
   max-width: 1400px;
   margin: 0 auto;
   padding: 20px;
+  overflow-x: hidden;
 }
 
 @media (min-width: 1200px) {
@@ -113,8 +114,10 @@ body {
 
   .price-card {
     min-width: 280px;
+    padding: 20px;
     scroll-snap-align: start;
     flex-shrink: 0;
+    width: 100%;
   }
 
   /* 모바일에서만 스와이프 힌트 표시 */
@@ -180,9 +183,15 @@ body {
 /* Content Grid */
 .content-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 20px;
-  height: 100%;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .content-grid {
+    grid-template-columns: 2fr 1fr;
+  }
 }
 
 .right-section {
@@ -307,15 +316,21 @@ body {
 }
 
 .price-cards {
-  flex: 1;
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 25px;
-  align-items: center;
-  height: 100%;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  width: 100%;
+}
+
+@media (min-width: 640px) {
+  .price-cards {
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
 }
 
 .price-card {
+  width: 100%;
+  min-width: unset;
   background: #2d3748;
   border-radius: 12px;
   padding: 25px;
@@ -343,13 +358,14 @@ body {
   flex-direction: column;
   justify-content: center;
   margin: 15px 0;
-  min-height: 150px;
+  min-height: 80px;
 }
 
 .price-card .price-content .price-value {
   font-size: 2.8em;
   margin: 10px 0;
-  min-height: 1.2em;
+  min-height: 40px;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -359,6 +375,8 @@ body {
   font-size: 2.8em;
   margin: 10px 0;
   transition: color 0.3s ease;
+  min-height: 40px;
+  width: 100%;
 }
 
 .price-up {
@@ -443,6 +461,7 @@ body {
   white-space: nowrap;
   width: 100%;
   padding: 0 5px;
+  min-width: 120px;
 }
 
 .detail-item span {
@@ -498,6 +517,7 @@ body {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 20px;
+  min-height: 80px;
 }
 
 .price-item {
@@ -921,8 +941,8 @@ body.light-mode .fear-greed-meter img {
 
 .mining-cards {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 15px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
 }
 
 .mining-card {
@@ -1012,5 +1032,34 @@ body.light-mode .fear-greed-meter img {
   .input-group input,
   .input-group button {
     width: 100%;
+  }
+}
+
+/* 기존 스타일 유지하면서 모바일 대응 추가 */
+@media (max-width: 768px) {
+  .price-card {
+    min-width: 320px; /* 모바일에서 카드 너비 약간 증가 */
+    padding: 20px; /* 패딩 증가 */
+  }
+
+  .price-details {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px; /* 간격 증가 */
+    width: 100%;
+    padding: 10px; /* 패딩 증가 */
+    margin-top: 15px; /* 위쪽 여백 추가 */
+  }
+
+  .detail-item {
+    font-size: 0.9em;
+    min-width: unset;
+    text-align: center;
+    padding: 8px; /* 패딩 추가 */
+  }
+
+  .detail-item span {
+    display: block;
+    margin-top: 6px; /* 간격 증가 */
   }
 }

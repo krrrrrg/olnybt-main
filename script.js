@@ -5,19 +5,19 @@ const ENDPOINTS = {
     "https://query1.finance.yahoo.com/v8/finance/chart/KRW=X?interval=1m&range=1d",
   FEAR_GREED: "https://api.alternative.me/fng/",
   BLOCKCHAIN: "https://mempool.space/api/blocks/tip/height",
-  BINANCE_WS: 'wss://stream.binance.com/stream?streams=btcusdt@miniTicker',
+  BINANCE_WS: "wss://stream.binance.com/stream?streams=btcusdt@miniTicker",
   UPBIT_WS: "wss://api.upbit.com/websocket/v1",
-  MEMPOOL_WS: 'wss://mempool.space/api/v1/ws',
-  ETH_RPC: 'https://rpc.ankr.com/eth',
+  MEMPOOL_WS: "wss://mempool.space/api/v1/ws",
+  ETH_RPC: "https://rpc.ankr.com/eth",
 };
 
 const promises = {
   binancePromise: null,
   upbitPromise: null,
-}
+};
 
 // https://data.chain.link/feeds/ethereum/mainnet/krw-usd
-const CHAINLINK_KRW_FEED = '0x01435677FB11763550905594A16B645847C1d0F3';
+const CHAINLINK_KRW_FEED = "0x01435677FB11763550905594A16B645847C1d0F3";
 
 // 비트코인 전송당 바이트 (세그윗 기준)
 const VBYTES_PER_TX = 144;
@@ -87,12 +87,7 @@ async function fetchBinanceData() {
 
     const data = await response.json();
 
-    const {
-      lastPrice,
-      highPrice,
-      lowPrice,
-      volume,
-    } = data || {};
+    const { lastPrice, highPrice, lowPrice, volume } = data || {};
 
     if (lastPrice) {
       const price = parseFloat(lastPrice);
@@ -123,12 +118,12 @@ async function fetchBinanceData() {
   return null;
 }
 
-// 바이낸스 웹소캣 연결
+// 바이낸스 웹소켓 연결
 function setupBinanceWebSocket() {
   const ws = new WebSocket(ENDPOINTS.BINANCE_WS);
 
   ws.onopen = () => {
-    console.log('Binance 웹소켓과 연결됨');
+    console.log("Binance 웹소켓과 연결됨");
   };
 
   ws.onmessage = (event) => {
@@ -139,12 +134,7 @@ function setupBinanceWebSocket() {
         return;
       }
 
-      const {
-        c: lastPrice,
-        h: highPrice,
-        l: lowPrice,
-        v: volume,
-      } = data;
+      const { c: lastPrice, h: highPrice, l: lowPrice, v: volume } = data;
 
       const price = parseFloat(lastPrice);
       document.getElementById("binance-price").textContent = `$${formatNumber(
@@ -159,30 +149,29 @@ function setupBinanceWebSocket() {
       document.getElementById(
         "binance-24h-volume"
       ).textContent = `${formatNumber(volume, 1)} BTC`;
-        
+
       const satoshiUSD = price / 100000000;
       document.getElementById("satoshi-usd").textContent = `$${formatNumber(
         satoshiUSD,
         6
       )}`;
-        
+
       // 전역 변수에 저장
       window.binancePrice = price;
       // 타이틀 업데이트
       updatePageTitle(window.binancePrice, window.upbitPrice);
 
-      if (typeof promises.binancePromise == 'function') {
+      if (typeof promises.binancePromise == "function") {
         promises.binancePromise(price);
 
         promises.binancePromise = null;
       }
 
       return price;
-
     } catch (error) {
       console.error("Binance 웹소켓 데이터 처리 실패:", error);
     }
-  }
+  };
 
   ws.onerror = (error) => {
     console.error("Binance 웹소켓 에러:", error);
@@ -206,7 +195,7 @@ function setupUpbitWebSocket() {
       { type: "ticker", codes: ["KRW-BTC"] },
     ]);
     ws.send(message);
-    console.log('Upbit 웹소켓과 연결됨');
+    console.log("Upbit 웹소켓과 연결됨");
   };
 
   ws.onmessage = (event) => {
@@ -218,12 +207,7 @@ function setupUpbitWebSocket() {
         return;
       }
 
-      const {
-        trade_price,
-        high_price,
-        low_price,
-        acc_trade_volume_24h,
-      } = data;
+      const { trade_price, high_price, low_price, acc_trade_volume_24h } = data;
 
       document.getElementById("upbit-price").textContent = `₩${formatNumber(
         trade_price
@@ -251,7 +235,7 @@ function setupUpbitWebSocket() {
       // 타이틀 업데이트
       updatePageTitle(window.binancePrice, window.upbitPrice);
 
-      if (typeof promises.upbitPromise == 'function') {
+      if (typeof promises.upbitPromise == "function") {
         promises.upbitPromise(trade_price);
 
         promises.upbitPromise = null;
@@ -285,11 +269,13 @@ function setupMempoolWebSocket() {
   const ws = new WebSocket(ENDPOINTS.MEMPOOL_WS);
 
   ws.onopen = () => {
-    ws.send(JSON.stringify({
-      "action": "want",
-      "data": ["stats"]
-    }));
-    console.log('Mempool 웹소켓과 연결됨');
+    ws.send(
+      JSON.stringify({
+        action: "want",
+        data: ["stats"],
+      })
+    );
+    console.log("Mempool 웹소켓과 연결됨");
   };
 
   ws.onmessage = (event) => {
@@ -301,13 +287,8 @@ function setupMempoolWebSocket() {
       }
 
       const {
-        da: {
-          nextRetargetHeight,
-          remainingBlocks,
-        },
-        fees: {
-          fastestFee,
-        },
+        da: { nextRetargetHeight, remainingBlocks },
+        fees: { fastestFee },
       } = data;
 
       const blockHeight = nextRetargetHeight - remainingBlocks;
@@ -315,11 +296,9 @@ function setupMempoolWebSocket() {
       let totalMinedBTC = 0;
       let count = 0;
       let coins = 50;
-      
+
       while (halvings >= count) {
-        const blocks = halvings > count
-          ? 210000
-          : blockHeight % 210000;
+        const blocks = halvings > count ? 210000 : blockHeight % 210000;
 
         totalMinedBTC += coins * blocks;
         coins = coins / 2;
@@ -327,17 +306,21 @@ function setupMempoolWebSocket() {
       }
       coins = coins * 2;
 
-      const issuancePerYear = 210000 * coins / 4;
-      const currentInflation = issuancePerYear * 100 / totalMinedBTC;
+      const issuancePerYear = (210000 * coins) / 4;
+      const currentInflation = (issuancePerYear * 100) / totalMinedBTC;
       const remainingBTC = 21000000 - totalMinedBTC;
-      
+
       document.getElementById("btc-height").textContent = `${formatNumber(
         blockHeight,
         0
       )}`;
-      document.getElementById("btc-fees").textContent = `${fastestFee} sat/vB ${window.upbitSat ? `
+      document.getElementById("btc-fees").textContent = `${fastestFee} sat/vB ${
+        window.upbitSat
+          ? `
         ( ₩${formatNumber(fastestFee * VBYTES_PER_TX * window.upbitSat, 0)} )
-      ` : ''}`;
+      `
+          : ""
+      }`;
       document.getElementById("btc-mined").textContent = `${formatNumber(
         totalMinedBTC,
         0
@@ -367,23 +350,39 @@ function setupMempoolWebSocket() {
   return ws;
 }
 
-const FeedABI = [{"inputs":[],"name":"latestAnswer","outputs":[{"internalType":"int256","name":"","type":"int256"}],"stateMutability":"view","type":"function"}];
+const FeedABI = [
+  {
+    inputs: [],
+    name: "latestAnswer",
+    outputs: [{ internalType: "int256", name: "", type: "int256" }],
+    stateMutability: "view",
+    type: "function",
+  },
+];
 
 // 체인링크 온체인 환율 (0.15% 마다 업데이트)
 async function fetchChainlinkKRW() {
   try {
-    const staticNetwork = new ethers.Network('eth', 1);
+    const staticNetwork = new ethers.Network("eth", 1);
 
-    const provider = new ethers.JsonRpcProvider(ENDPOINTS.ETH_RPC, staticNetwork, {
-      staticNetwork
-    });
+    const provider = new ethers.JsonRpcProvider(
+      ENDPOINTS.ETH_RPC,
+      staticNetwork,
+      {
+        staticNetwork,
+      }
+    );
 
-    const krwDataFeed = new ethers.BaseContract(CHAINLINK_KRW_FEED, FeedABI, provider);
+    const krwDataFeed = new ethers.BaseContract(
+      CHAINLINK_KRW_FEED,
+      FeedABI,
+      provider
+    );
 
     const answer = await krwDataFeed.latestAnswer();
 
     if (!answer) {
-      throw new Error('Invalid feed data');
+      throw new Error("Invalid feed data");
     }
 
     const rate = 10 ** 8 / Number(answer);
@@ -527,9 +526,7 @@ async function fetchMiningData() {
     let coins = 50;
 
     while (halvings >= count) {
-      const blocks = halvings > count
-        ? 210000
-        : blockHeight % 210000;
+      const blocks = halvings > count ? 210000 : blockHeight % 210000;
 
       totalMinedBTC += coins * blocks;
       coins = coins / 2;
@@ -589,10 +586,7 @@ async function updateAllData() {
       window.lastFearGreedUpdate = Date.now();
     }
     **/
-    await Promise.all([
-      fetchChainlinkKRW(),
-      fetchFearGreedIndex(),
-    ]);
+    await Promise.all([fetchChainlinkKRW(), fetchFearGreedIndex()]);
   } catch (error) {
     console.error("데이터 업데이트 실패:", error);
   }
@@ -660,8 +654,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   // 웹소캣 연결을 막는 것 같아 비활성화
   // await getInitialUpbitPrice();
 
-  const upbitPromise = new Promise((resolve) => promises.upbitPromise = resolve);
-  const binancePromise = new Promise((resolve) => promises.binancePromise = resolve);
+  const upbitPromise = new Promise(
+    (resolve) => (promises.upbitPromise = resolve)
+  );
+  const binancePromise = new Promise(
+    (resolve) => (promises.binancePromise = resolve)
+  );
 
   // Upbit 웹소켓 연결
   const upbitWs = setupUpbitWebSocket();
@@ -682,3 +680,49 @@ document.addEventListener("DOMContentLoaded", async () => {
     mempoolWs.close();
   });
 });
+
+// 비트코인 순위 확인 함수
+function checkRanking() {
+  const amount = parseFloat(document.getElementById("btc-amount").value);
+
+  if (isNaN(amount) || amount < 0) {
+    alert("올바른 비트코인 수량을 입력하세요.");
+    return;
+  }
+
+  // 2024년 2월 현재 데이터 (BitInfoCharts)
+  const totalAddresses = 52_640_000;
+  let percent, rank;
+
+  // 실제 분포 데이터 기반
+  if (amount >= 100) {
+    percent = 0.01;
+    rank = 5_264;
+  } else if (amount >= 10) {
+    percent = 0.13;
+    rank = 68_432;
+  } else if (amount >= 1) {
+    percent = 1.92;
+    rank = 1_010_688;
+  } else if (amount >= 0.1) {
+    percent = 5.76;
+    rank = 3_032_064;
+  } else if (amount >= 0.01) {
+    percent = 14.12;
+    rank = 7_432_768;
+  } else if (amount >= 0.001) {
+    percent = 33.67;
+    rank = 17_723_888;
+  } else {
+    percent = 100;
+    rank = totalAddresses;
+  }
+
+  document.getElementById("btc-percent").textContent = `상위 ${percent.toFixed(
+    2
+  )}% 이내`;
+  document.getElementById("btc-rank").textContent = `${formatNumber(
+    rank,
+    0
+  )}위 이내`;
+}

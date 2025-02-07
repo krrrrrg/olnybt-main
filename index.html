@@ -181,6 +181,39 @@
           </div>
         </div>
 
+        <div class="mining-section">
+          <div class="mining-info">
+            <h2 class="section-title">
+              <i class="fas fa-ranking-star"></i>
+              비트코인 순위 확인 (임시 기능: 2024년 2월 기반)
+            </h2>
+            <div class="ranking-form">
+              <div class="input-group">
+                <input
+                  type="number"
+                  id="btc-amount"
+                  step="0.00000001"
+                  min="0"
+                  placeholder="보유 중인 비트코인 수량을 입력하세요"
+                />
+                <button onclick="checkRanking()">순위 확인</button>
+              </div>
+              <div class="ranking-result">
+                <div class="mining-cards">
+                  <div class="mining-card">
+                    <div class="info-title">상위 퍼센트</div>
+                    <div id="btc-percent" class="info-value">-</div>
+                  </div>
+                  <div class="mining-card">
+                    <div class="info-title">전체 순위</div>
+                    <div id="btc-rank" class="info-value">-</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="chart-container">
           <section class="chart">
             <h2>가격 차트</h2>

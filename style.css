@@ -969,3 +969,48 @@ body.light-mode .fear-greed-meter img {
     padding: 15px;
   }
 }
+
+.ranking-form {
+  margin-top: 15px;
+}
+
+.input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.input-group input {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: #2d3748;
+  color: #e2e8f0;
+  font-size: 1em;
+}
+
+.input-group button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #f7931a;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.input-group button:hover {
+  background: #e17f0e;
+}
+
+@media (max-width: 768px) {
+  .input-group {
+    flex-direction: column;
+  }
+
+  .input-group input,
+  .input-group button {
+    width: 100%;
+  }
+}

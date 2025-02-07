@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
+    <!--meta
       http-equiv="Content-Security-Policy"
       content="default-src 'self' https: wss:; script-src 'self' 'unsafe-inline' https:; style-src 'self' 'unsafe-inline' https:; connect-src 'self' https: wss: https://proxy.cors.sh/;"
-    />
+    /-->
     <meta
       http-equiv="Cache-Control"
       content="no-cache, no-store, must-revalidate"
@@ -16,13 +16,16 @@
     <title>비트코인 좋게보이너</title>
     <link rel="stylesheet" href="style.css" />
     <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-    />
-    <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.7.2/css/all.min.css"
+    />
+
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.5/dist/ethers.umd.min.js"></script>
+    
     <meta
       name="description"
       content="실시간 비트코인 시세 및 김치프리미엄 모니터링"
@@ -107,14 +110,14 @@
             <div class="satoshi-card">
               <div class="info-title">
                 <i class="fas fa-dollar-sign"></i>
-                USD
+                1 SAT/USD
               </div>
               <div id="satoshi-usd" class="info-value">로딩 중...</div>
             </div>
             <div class="satoshi-card">
               <div class="info-title">
                 <i class="fas fa-won-sign"></i>
-                KRW
+                1 SAT/KRW
               </div>
               <div id="satoshi-krw" class="info-value">로딩 중...</div>
             </div>
@@ -152,12 +155,24 @@
             <br />
             <div class="mining-cards">
               <div class="mining-card">
+                <div class="info-title">비트코인 블록</div>
+                <div id="btc-height" class="info-value">로딩 중...</div>
+              </div>
+              <div class="mining-card">
+                <div class="info-title">비트코인 수수료율 ( 전송시 )</div>
+                <div id="btc-fees" class="info-value">로딩 중...</div>
+              </div>
+              <div class="mining-card">
                 <div class="info-title">채굴된 비트코인</div>
                 <div id="btc-mined" class="info-value">로딩 중...</div>
               </div>
               <div class="mining-card">
                 <div class="info-title">남은 채굴량</div>
                 <div id="btc-remaining" class="info-value">로딩 중...</div>
+              </div>
+              <div class="mining-card">
+                <div class="info-title">인플레이션 ( 채굴 보상 )</div>
+                <div id="btc-inflation" class="info-value">로딩 중...</div>
               </div>
             </div>
           </div>

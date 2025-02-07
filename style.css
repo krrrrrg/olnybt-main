@@ -921,7 +921,7 @@ body.light-mode .fear-greed-meter img {
 
 .mining-cards {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 15px;
 }
 
@@ -943,6 +943,12 @@ body.light-mode .fear-greed-meter img {
 
   .price-card .exchange-name {
     font-size: 1.2em; /* 거래소 이름도 조정 */
+  }
+
+  .mining-cards {
+    display: grid;
+    grid-template-columns: repeat(1, 1fr);
+    gap: 15px;
   }
 }
 

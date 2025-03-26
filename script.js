@@ -8,7 +8,8 @@ const ENDPOINTS = {
   BINANCE_WS: "wss://stream.binance.com/stream?streams=btcusdt@miniTicker",
   UPBIT_WS: "wss://api.upbit.com/websocket/v1",
   MEMPOOL_WS: "wss://mempool.space/api/v1/ws",
-  ETH_RPC: "https://rpc.ankr.com/eth",
+  // https://chainlist.org 에서 작동 가능한 노드 찾을 수 있음
+  ETH_RPC: "https://rpc.mevblocker.io",
 };
 
 const promises = {
